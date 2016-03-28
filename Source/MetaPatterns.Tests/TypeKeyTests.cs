@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MetaPatterns.Bases;
+using MetaPatterns.Abstractions;
 using NUnit.Framework;
 using Shouldly;
 

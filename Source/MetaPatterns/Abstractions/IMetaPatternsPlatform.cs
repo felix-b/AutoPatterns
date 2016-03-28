@@ -1,4 +1,4 @@
-﻿namespace MetaPatterns.Bases
+﻿namespace MetaPatterns.Abstractions
 {
     public interface IMetaPatternsPlatform
     {
