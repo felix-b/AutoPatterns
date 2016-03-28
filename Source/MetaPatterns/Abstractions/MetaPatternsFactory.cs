@@ -105,7 +105,24 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual TypeEntry GetOrAddTypeEntry(TypeKey key)
+        protected virtual string GetClassName(TypeKey key)
+        {
+            return key.ToString();
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected virtual void OnTypeEntryCreated(TypeEntry entry)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected virtual string NamespaceName => this.GetType().Name.TrimSuffix("Factory");
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private TypeEntry GetOrAddTypeEntry(TypeKey key)
         {
             TypeEntry entry;
 
@@ -119,6 +136,7 @@ namespace MetaPatterns.Abstractions
                         var type = GetTypeFromAssembliesOrThrow(key);
                         entry = new TypeEntry(key, type.GetTypeInfo());
                         _typeEntryByKey = _typeEntryByKey.Add(key, entry);
+                        OnTypeEntryCreated(entry);
                     }
                 }
             }
@@ -128,27 +146,15 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual string GetClassName(TypeKey key)
-        {
-            return key.ToString();
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        protected virtual string NamespaceName => this.GetType().Name.TrimSuffix("Factory");
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        protected ImmutableDictionary<TypeKey, TypeEntry> TypeEntryByKey => _typeEntryByKey;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         private Type GetTypeFromAssembliesOrThrow(TypeKey key)
         {
             for (int i = 0 ; i < _assemblies.Length ; i++)
             {
                 var assembly = _assemblies[i];
-                var typeString = $"{NamespaceName}.{GetClassName(key)}, {assembly.GetName().Name}";
+                var typeString = (
+                    string.IsNullOrEmpty(NamespaceName) ? 
+                    $"{GetClassName(key)}, {assembly.GetName().Name}" : 
+                    $"{NamespaceName}.{GetClassName(key)}, {assembly.GetName().Name}");
                 var type = Type.GetType(typeString, throwOnError: false);
 
                 if (type != null)
