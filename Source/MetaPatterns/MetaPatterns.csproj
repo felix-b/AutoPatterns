@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\IMetaPatternsPlatform.cs" />
+    <Compile Include="Abstractions\MetaPatternsCompiler.cs" />
     <Compile Include="Abstractions\MetaPatternsFactory.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="TypeKey.cs" />

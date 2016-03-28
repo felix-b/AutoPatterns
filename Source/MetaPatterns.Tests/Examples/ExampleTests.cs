@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MetaPatterns.Tests.Examples;
 using MetaPatterns.Tests.Repo;
 using NUnit.Framework;
 using Shouldly;
 
-namespace MetaPatterns.Tests
+namespace MetaPatterns.Tests.Examples
 {
     [TestFixture]
     public class ExampleTests
@@ -18,7 +13,7 @@ namespace MetaPatterns.Tests
         {
             //-- arrange
 
-            var factory = new ExampleAutomaticPropertyFactory(new Net45MetaPatternsPlatform());
+            var factory = new ExampleAutomaticPropertyFactory();
 
             //-- act
 

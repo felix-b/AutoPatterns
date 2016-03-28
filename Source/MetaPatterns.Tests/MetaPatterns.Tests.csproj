@@ -53,10 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Examples\ExampleAutomaticPropertyFactory.cs" />
-    <Compile Include="ExampleTests.cs" />
+    <Compile Include="Examples\ExampleTests.cs" />
     <Compile Include="Examples\ExampleAutomaticProperty.cs" />
     <Compile Include="Examples\ExampleDataContract.cs" />
     <Compile Include="Examples\ExampleNotifyPropertyChanged.cs" />
+    <Compile Include="Extensions\StringExtensionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Examples\ExampleEquatable.cs" />
     <Compile Include="Repo\IHaveScalarProperties.cs" />
@@ -74,6 +75,9 @@
       <Project>{cdec9fd4-236f-4239-8c3e-04d0facd379e}</Project>
       <Name>MetaPatterns</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Abstractions\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
