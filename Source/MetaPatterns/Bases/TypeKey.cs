@@ -1,10 +1,10 @@
-#pragma warning disable 659
-
 using System;
 using System.Reflection;
 
 namespace MetaPatterns.Bases
 {
+    #pragma warning disable 659 // abstract TypeKey overrides Equals, but GetHashCode is overridden by TypeKey's descendands, which produces warning 659.
+
     public abstract class TypeKey : IEquatable<TypeKey>
     {
         public override bool Equals(object obj)
@@ -43,6 +43,8 @@ namespace MetaPatterns.Bases
             return field1.Equals(field2);
         }
     }
+
+    #pragma warning restore 659
 
     //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -422,6 +424,10 @@ namespace MetaPatterns.Bases
             if (_s_isValueType2 || !ReferenceEquals(_value2, null))
             {
                 hashCode ^= _value2.GetHashCode();
+            }
+            if (_s_isValueType3 || !ReferenceEquals(_value3, null))
+            {
+                hashCode ^= _value3.GetHashCode();
             }
 
             return hashCode;

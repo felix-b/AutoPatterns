@@ -95,6 +95,71 @@ namespace MetaPatterns.Tests
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [Test]
+        public void HashCodesOfIdenticalKeysAreEqual()
+        {
+            //-- arrange
+
+            TypeKey key1 = new TypeKey<Type>(typeof(IDisposable));
+            TypeKey key1B = new TypeKey<Type>(typeof(IDisposable));
+
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
+            TypeKey key2B = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
+
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
+            TypeKey key3B = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
+
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key4B = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+
+            //-- act
+
+            var hash1 = new[] { key1.GetHashCode(), key1B.GetHashCode() };
+            var hash2 = new[] { key2.GetHashCode(), key2B.GetHashCode() };
+            var hash3 = new[] { key3.GetHashCode(), key3B.GetHashCode() };
+            var hash4 = new[] { key4.GetHashCode(), key4B.GetHashCode() };
+
+            //-- assert
+
+            hash1[1].ShouldBe(hash1[0]);
+            hash2[1].ShouldBe(hash2[0]);
+            hash3[1].ShouldBe(hash3[0]);
+            hash4[1].ShouldBe(hash4[0]);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void HashCodesOfNonIdenticalKeysDiffer()
+        {
+            //-- arrange
+
+            TypeKey key1 = new TypeKey<Type>(typeof(IDisposable));
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+
+            //-- act
+
+            var hash1 = key1.GetHashCode();
+            var hash2 = key2.GetHashCode();
+            var hash3 = key3.GetHashCode();
+            var hash4 = key4.GetHashCode();
+
+            //-- assert
+
+            hash1.ShouldNotBe(hash2);
+            hash1.ShouldNotBe(hash3);
+            hash1.ShouldNotBe(hash4);
+
+            hash2.ShouldNotBe(hash3);
+            hash2.ShouldNotBe(hash4);
+
+            hash3.ShouldNotBe(hash4);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
         public void CanCompareTypeKeysOfDifferentStructure()
         {
             //-- arrange
