@@ -3,7 +3,7 @@ using TT = MetaPatterns.MetaProgram.TypeParam;
 
 namespace MetaPatterns.Tests.Examples
 {
-    [MetaProgram.Annotation.Template]
+    [MetaProgram.Annotation.ClassTemplate]
     public class ExampleEquatable : TT.IPrimaryContract, IEquatable<TT.IPrimaryContract>
     {
         [MetaProgram.Annotation.DeclaredMember]

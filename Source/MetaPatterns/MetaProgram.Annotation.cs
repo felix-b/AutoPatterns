@@ -11,7 +11,7 @@ namespace MetaPatterns
         public static class Annotation
         {
             [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-            public class TemplateAttribute : Attribute
+            public class ClassTemplateAttribute : Attribute
             {
             }
 

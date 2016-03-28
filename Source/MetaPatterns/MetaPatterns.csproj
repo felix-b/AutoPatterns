@@ -40,7 +40,9 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IMetaPatternsPlatform.cs" />
+    <Compile Include="Bases\IMetaPatternsPlatform.cs" />
+    <Compile Include="Bases\MetaPatternsFactory.cs" />
+    <Compile Include="Bases\TypeKey.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.MetaType.cs" />
     <Compile Include="MetaProgram.Annotation.cs" />
@@ -49,7 +51,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Bases\" />
     <Folder Include="Impls\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

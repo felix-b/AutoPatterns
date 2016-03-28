@@ -2,7 +2,7 @@
 
 namespace MetaPatterns.Tests.Examples
 {
-    [MetaProgram.Annotation.Template]
+    [MetaProgram.Annotation.ClassTemplate]
     [DataContract(Name = MetaProgram.Constant.String1, Namespace = MetaProgram.Constant.String2)]
     public class ExampleDataContract
     {

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MetaPatterns.Tests.Examples
 {
-    [MetaProgram.Annotation.Template]
+    [MetaProgram.Annotation.ClassTemplate]
     public class ExampleNotifyPropertyChanged : INotifyPropertyChanged
     {
         [MetaProgram.Annotation.MetaMember]
@@ -25,8 +25,12 @@ namespace MetaPatterns.Tests.Examples
             }
         }
 
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         [MetaProgram.Annotation.DeclaredMember]
         public event PropertyChangedEventHandler PropertyChanged;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [MetaProgram.Annotation.NewMember]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
