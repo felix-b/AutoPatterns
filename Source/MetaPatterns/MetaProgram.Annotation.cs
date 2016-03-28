@@ -40,6 +40,20 @@ namespace MetaPatterns
             public class DeclaredMemberAttribute : Attribute
             {
             }
+
+            //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+            [AttributeUsage(
+                AttributeTargets.Constructor |
+                AttributeTargets.Method |
+                AttributeTargets.Property |
+                AttributeTargets.Event |
+                AttributeTargets.Field,
+                AllowMultiple = false,
+                Inherited = true)]
+            public class NewMemberAttribute : Attribute
+            {
+            }
         }
     }
 }
