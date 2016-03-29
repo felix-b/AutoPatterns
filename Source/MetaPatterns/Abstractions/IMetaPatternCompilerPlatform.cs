@@ -7,9 +7,7 @@ namespace MetaPatterns.Abstractions
 {
     public interface IMetaPatternCompilerPlatform
     {
-        ISyntaxCache CreateSyntaxCache();
-        MetadataReference GetMetadataReference(Assembly assembly);
-        MetadataReference GetMetadataReference(Type type);
+        MetadataReference CreateMetadataReference(Assembly assembly);
         Assembly LoadAssemblyFromBytes(byte[] bytes);
         void Print(string message);
     }

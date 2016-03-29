@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,25 +14,16 @@ namespace MetaPatterns
 {
     public class Net45MetaPatternsPlatform : IMetaPatternCompilerPlatform
     {
+        private readonly object _referenceCacheSyncRoot = new object();
+        private ImmutableDictionary<string, MetadataReference> _referenceCache = ImmutableDictionary.Create<string, MetadataReference>();
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         #region Implementation of IMetaPatternCompilerPlatform
 
-        public ISyntaxCache CreateSyntaxCache()
-        {
-            return new SyntaxCache();
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public MetadataReference GetMetadataReference(Assembly assembly)
+        public MetadataReference CreateMetadataReference(Assembly assembly)
         {
             return MetadataReference.CreateFromFile(assembly.Location);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public MetadataReference GetMetadataReference(Type type)
-        {
-            return MetadataReference.CreateFromFile(type.Assembly.Location);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,31 +41,5 @@ namespace MetaPatterns
         }
 
         #endregion
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private class SyntaxCache : ISyntaxCache
-        {
-            private readonly ConcurrentDictionary<TypeKey, MemberDeclarationSyntax> _classSyntaxByKey = 
-                new ConcurrentDictionary<TypeKey, MemberDeclarationSyntax>();
-
-            //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-            #region Implementation of IClassSyntaxCache
-
-            public MemberDeclarationSyntax GetOrBuild(TypeKey key, Func<MemberDeclarationSyntax> builder)
-            {
-                return _classSyntaxByKey.GetOrAdd(key, k => builder());
-            }
-
-            //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-            public MemberDeclarationSyntax[] ExportAll()
-            {
-                return _classSyntaxByKey.Values.ToArray();
-            }
-
-            #endregion
-        }
     }
 }

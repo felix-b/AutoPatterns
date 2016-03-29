@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using MetaPatterns.Abstractions;
-using MetaPatterns.Tests.Repo;
 using NUnit.Framework;
 using Shouldly;
 
@@ -17,30 +17,27 @@ namespace MetaPatterns.Tests.Examples
             //-- arrange
 
             var compiler = new ExampleAutomaticPropertyCompiler(new Net45MetaPatternsPlatform());
-            compiler.CompileExampleObject();
+            compiler.CompileExampleObject<TestTypes.IScalarProperties>();
 
-            var assembly = MetaPatternCompiler.CompileAndLoadAssembly(new MetaPatternCompiler[] { compiler });
+            var assemblyBytes = MetaPatternCompiler.CompileAssembly(new MetaPatternCompiler[] { compiler }, "EmittedByExampleTests");
+            File.WriteAllBytes($@"C:\Temp\EmittedByExampleTests.dll", assemblyBytes);
+            var assembly = Assembly.Load(assemblyBytes); //MetaPatternCompiler.CompileAndLoadAssembly(new MetaPatternCompiler[] { compiler });
             var factory = new ExampleAutomaticPropertyFactory(assembly);
 
-            dynamic obj = factory.CreateExampleObject();
+            //-- act
+
+            var obj = factory.CreateExampleObject<TestTypes.IScalarProperties>();
             obj.IntValue = 123;
-            int value = obj.IntValue;
-            value.ShouldBe(123);
+            obj.StringValue = "ABC";
+            obj.EnumValue = DayOfWeek.Thursday;
+            obj.TimeSpanValue = TimeSpan.FromSeconds(123);
 
-            ////-- act
+            //-- assert
 
-            //IHaveScalarProperties obj = factory.CreateExampleObject();
-            //obj.IntValue = 123;
-            //obj.StringValue = "ABC";
-            //obj.EnumValue = DayOfWeek.Thursday;
-            //obj.TimeSpanValue = TimeSpan.FromSeconds(123);
-
-            ////-- assert
-
-            //obj.IntValue.ShouldBe(123);
-            //obj.StringValue.ShouldBe("ABC");
-            //obj.EnumValue.ShouldBe(DayOfWeek.Thursday);
-            //obj.TimeSpanValue.ShouldBe(TimeSpan.FromSeconds(123));
+            obj.IntValue.ShouldBe(123);
+            obj.StringValue.ShouldBe("ABC");
+            obj.EnumValue.ShouldBe(DayOfWeek.Thursday);
+            obj.TimeSpanValue.ShouldBe(TimeSpan.FromSeconds(123));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,9 +51,9 @@ namespace MetaPatterns.Tests.Examples
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public void CompileExampleObject()
+            public void CompileExampleObject<T>()
             {
-                BuildSyntax(new TypeKey<int>(123));
+                BuildSyntax(new TypeKey<Type>(typeof(T)), primaryInterface: typeof(T));
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,10 +77,47 @@ namespace MetaPatterns.Tests.Examples
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public object CreateExampleObject()
+            public T CreateExampleObject<T>()
             {
-                return base.CreateInstance(new TypeKey<int>(123), constructorIndex: 0);
+                return (T)base.CreateInstance(new TypeKey<Type>(typeof(T)), constructorIndex: 0);
             }
+        }
+    }
+}
+
+namespace ExampleAutomaticProperty
+{
+    using System;
+
+    public class MetaPatterns_Tests_TestTypes_IScalarProperties : MetaPatterns.Tests.TestTypes.IScalarProperties
+    {
+        public static object FactoryMethod__0()
+        {
+            return new MetaPatterns_Tests_TestTypes_IScalarProperties();
+        }
+
+        public System.Int32 IntValue
+        {
+            get;
+            set;
+        }
+
+        public System.String StringValue
+        {
+            get;
+            set;
+        }
+
+        public System.DayOfWeek EnumValue
+        {
+            get;
+            set;
+        }
+
+        public System.TimeSpan TimeSpanValue
+        {
+            get;
+            set;
         }
     }
 }

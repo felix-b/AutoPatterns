@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using MetaPatterns.Extensions;
 
 namespace MetaPatterns
 {
@@ -41,6 +42,24 @@ namespace MetaPatterns
             }
 
             return field1.Equals(field2);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly string _s_typeFriendlyNamePunctuation = new string(new[] { '_', '_', '_', '_', '_' });
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected static string Format<T>(T value)
+        {
+            if (typeof(T) == typeof(Type))
+            {
+                var typeInfo = ((Type)(object)value).GetTypeInfo();
+                var friendlyName = typeInfo.FriendlyName(punctuation: _s_typeFriendlyNamePunctuation).Replace("+", "_");
+                return typeInfo.Namespace.Replace(".", "_") + "_" + friendlyName;
+            }
+
+            return value.ToString();
         }
     }
 
@@ -119,7 +138,7 @@ namespace MetaPatterns
 
         public override string ToString()
         {
-            return $"{_value0}";
+            return $"{Format(_value0)}";
         }
 
         #endregion
@@ -213,7 +232,7 @@ namespace MetaPatterns
 
         public override string ToString()
         {
-            return $"{_value0}_{_value1}";
+            return $"{Format(_value0)}_{Format(_value1)}";
         }
 
         #endregion
@@ -319,7 +338,7 @@ namespace MetaPatterns
 
         public override string ToString()
         {
-            return $"{_value0}_{_value1}_{_value2}";
+            return $"{Format(_value0)}_{Format(_value1)}_{Format(_value2)}";
         }
 
         #endregion
@@ -437,7 +456,7 @@ namespace MetaPatterns
 
         public override string ToString()
         {
-            return $"{_value0}_{_value1}_{_value2}_{_value3}";
+            return $"{Format(_value0)}_{Format(_value1)}_{Format(_value2)}_{Format(_value3)}";
         }
 
         #endregion

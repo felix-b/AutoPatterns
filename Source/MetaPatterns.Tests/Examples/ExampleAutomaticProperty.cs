@@ -35,6 +35,25 @@ namespace MetaPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        private bool Template__ShouldApply(MetaPatternCompilerContext context)
+        {
+            return true;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void Template__BeginApply(MetaPatternCompilerContext context)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void Template__EndApply(MetaPatternCompilerContext context)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private bool Match__AProperty(MetaPatternCompilerContext context, PropertyInfo declaration)
         {
             return (declaration.CanRead && declaration.CanWrite && declaration.GetIndexParameters().Length == 0);

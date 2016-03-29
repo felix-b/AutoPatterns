@@ -27,25 +27,25 @@ namespace MetaPatterns.Tests
 
             key1.Count.ShouldBe(1);
             key1[0].ShouldBe(typeof(IDisposable));
-            key1.ToString().ShouldBe("System.IDisposable");
+            key1.ToString().ShouldBe("System_IDisposable");
 
             key2.Count.ShouldBe(2);
             key2[0].ShouldBe(typeof(FileStream));
             key2[1].ShouldBe(typeof(IDisposable));
-            key2.ToString().ShouldBe("System.IO.FileStream_System.IDisposable");
+            key2.ToString().ShouldBe("System_IO_FileStream_System_IDisposable");
 
             key3.Count.ShouldBe(3);
             key3[0].ShouldBe(typeof(FileStream));
             key3[1].ShouldBe(typeof(IDisposable));
             key3[2].ShouldBe(123);
-            key3.ToString().ShouldBe("System.IO.FileStream_System.IDisposable_123");
+            key3.ToString().ShouldBe("System_IO_FileStream_System_IDisposable_123");
 
             key4.Count.ShouldBe(4);
             key4[0].ShouldBe(typeof(FileStream));
             key4[1].ShouldBe(typeof(IDisposable));
             key4[2].ShouldBe(123);
             key4[3].ShouldBe("ABC");
-            key4.ToString().ShouldBe("System.IO.FileStream_System.IDisposable_123_ABC");
+            key4.ToString().ShouldBe("System_IO_FileStream_System_IDisposable_123_ABC");
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

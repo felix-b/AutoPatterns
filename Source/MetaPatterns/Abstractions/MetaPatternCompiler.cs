@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,18 +20,19 @@ namespace MetaPatterns.Abstractions
     public abstract class MetaPatternCompiler
     {
         public const string FactoryMethodNamePrefix = "FactoryMethod__";
+        public const string DefaultAssemblyName = "MetaPatterns.GeneratedTypes";
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         private readonly IMetaPatternCompilerPlatform _platform;
-        private readonly ISyntaxCache _syntaxCache;
+        private readonly ConcurrentDictionary<TypeKey, MemberDeclarationSyntax> _syntaxCache;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         protected MetaPatternCompiler(IMetaPatternCompilerPlatform platform)
         {
             _platform = platform;
-            _syntaxCache = platform.CreateSyntaxCache();
+            _syntaxCache = new ConcurrentDictionary<TypeKey, MemberDeclarationSyntax>();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -47,19 +50,16 @@ namespace MetaPatterns.Abstractions
 
         protected void BuildSyntax(TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
-            _syntaxCache.GetOrBuild(
+            _syntaxCache.GetOrAdd(
                 typeKey, 
-                () => BuildNewSyntax(typeKey, baseType, primaryInterfaces, secondaryInterfaces));
+                k => BuildNewClassSyntax(typeKey, baseType, primaryInterfaces, secondaryInterfaces));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal void ExportAll(out MemberDeclarationSyntax[] members, out MetadataReference[] references)
+        internal void ExportAllSyntaxes(out MemberDeclarationSyntax[] members)
         {
-            members = _syntaxCache.ExportAll();
-            references = new[] {
-                _platform.GetMetadataReference(typeof(object).GetTypeInfo().Assembly)
-            };
+            members = _syntaxCache.Values.ToArray();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private MemberDeclarationSyntax BuildNewSyntax(
+        private MemberDeclarationSyntax BuildNewClassSyntax(
             TypeKey typeKey, 
             Type baseType, 
             Type[] primaryInterfaces, 
@@ -85,6 +85,8 @@ namespace MetaPatterns.Abstractions
             var context = new MetaPatternCompilerContext(this, typeKey, baseType, primaryInterfaces, secondaryInterfaces);
             var pipeline = BuildPipeline(context);
 
+            PreBuildSyntax(context);
+
             for (int i = 0; i < pipeline.Length; i++)
             {
                 pipeline[i].Apply(context);
@@ -92,6 +94,36 @@ namespace MetaPatterns.Abstractions
 
             var syntax = GetFinalSyntax(context);
             return syntax;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void PreBuildSyntax(MetaPatternCompilerContext context)
+        {
+            EnsureMetadataReference(_platform, typeof(object));
+
+            if (context.Input.BaseType != null)
+            {
+                AddBaseType(context.Input.BaseType, context);
+            }
+
+            foreach (var interfaceType in context.Input.PrimaryInterfaces)
+            {
+                AddBaseType(interfaceType, context);
+            }
+
+            foreach (var interfaceType in context.Input.SecondaryInterfaces)
+            {
+                AddBaseType(interfaceType, context);
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void AddBaseType(Type type, MetaPatternCompilerContext context)
+        {
+            EnsureMetadataReference(_platform, type);
+            context.Output.BaseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,6 +142,7 @@ namespace MetaPatterns.Abstractions
                         new MemberDeclarationSyntax[] {
                             ClassDeclaration(context.Output.ClassName)
                                 .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                                .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
                                 .WithMembers(List<MemberDeclarationSyntax>(
                                     context.Output.GetAllMembers()
                                 ))
@@ -168,7 +201,12 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static byte[] CompileAssembly(MetaPatternCompiler[] compilers)
+        private static readonly object _s_referenceCacheSyncRoot = new object();
+        private static ImmutableDictionary<string, MetadataReference> _s_referenceCache = ImmutableDictionary.Create<string, MetadataReference>();
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public static byte[] CompileAssembly(MetaPatternCompiler[] compilers, string assemblyName = null)
         {
             if (compilers == null)
             {
@@ -180,12 +218,11 @@ namespace MetaPatterns.Abstractions
                 throw new ArgumentException("At least one compiler is required.", nameof(compilers));
             }
 
-            List<MemberDeclarationSyntax> allMembers = new List<MemberDeclarationSyntax>();
-            HashSet<MetadataReference> allReferences = new HashSet<MetadataReference>();
+            var allMembers = new List<MemberDeclarationSyntax>();
 
             foreach (var compiler in compilers)
             {
-                IncludeExportsFromCompiler(compiler, allMembers, allReferences);
+                IncludeExportsFromCompiler(compiler, allMembers);
             }
 
             var syntaxTree = SyntaxTree(CompilationUnit().WithMembers(List<MemberDeclarationSyntax>(allMembers)).NormalizeWhitespace());
@@ -194,9 +231,9 @@ namespace MetaPatterns.Abstractions
             platform.Print(syntaxTree.ToString());
 
             var compilation = CSharpCompilation
-                .Create("MetaPatterns.GeneratedTypes", options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                    .AddReferences(platform.GetMetadataReference(typeof(object)))
-                    .AddSyntaxTrees(syntaxTree);
+                .Create(assemblyName ?? DefaultAssemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(_s_referenceCache.Values)
+                .AddSyntaxTrees(syntaxTree);
 
             var assemblyBytes = EmitAssemblyBytes(compilation);
             return assemblyBytes;
@@ -213,18 +250,42 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        internal protected static MetadataReference EnsureMetadataReference(IMetaPatternCompilerPlatform platform, Assembly assembly)
+        {
+            var cacheKey = assembly.FullName;
+            MetadataReference reference;
+
+            if (!_s_referenceCache.TryGetValue(cacheKey, out reference))
+            {
+                lock (_s_referenceCacheSyncRoot)
+                {
+                    if (!_s_referenceCache.TryGetValue(cacheKey, out reference))
+                    {
+                        reference = platform.CreateMetadataReference(assembly);
+                        _s_referenceCache = _s_referenceCache.Add(cacheKey, reference);
+                    }
+                }
+            }
+
+            return reference;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        internal protected static MetadataReference EnsureMetadataReference(IMetaPatternCompilerPlatform platform, Type type)
+        {
+            return EnsureMetadataReference(platform, type.GetTypeInfo().Assembly);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private static void IncludeExportsFromCompiler(
             MetaPatternCompiler compiler, 
-            List<MemberDeclarationSyntax> allMembers, 
-            HashSet<MetadataReference> allReferences)
+            List<MemberDeclarationSyntax> allMembers)
         {
             MemberDeclarationSyntax[] members;
-            MetadataReference[] references;
-
-            compiler.ExportAll(out members, out references);
-
+            compiler.ExportAllSyntaxes(out members);
             allMembers.AddRange(members);
-            allReferences.UnionWith(references);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -114,9 +114,10 @@
     <Compile Include="Examples\ExampleDataContract.cs" />
     <Compile Include="Examples\ExampleNotifyPropertyChanged.cs" />
     <Compile Include="Extensions\StringExtensionTests.cs" />
+    <Compile Include="Extensions\TypeExtensionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Examples\ExampleEquatable.cs" />
-    <Compile Include="Repo\IHaveScalarProperties.cs" />
+    <Compile Include="TestTypes.cs" />
     <Compile Include="TypeKeyTests.cs" />
   </ItemGroup>
   <ItemGroup>
