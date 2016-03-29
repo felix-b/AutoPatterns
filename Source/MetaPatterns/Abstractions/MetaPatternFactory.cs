@@ -8,7 +8,7 @@ using MetaPatterns.Extensions;
 
 namespace MetaPatterns.Abstractions
 {
-    public abstract class MetaPatternsFactory
+    public abstract class MetaPatternFactory
     {
         private readonly object _syncRoot = new object();
         private readonly Assembly[] _assemblies;
@@ -16,7 +16,7 @@ namespace MetaPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected MetaPatternsFactory(IEnumerable<Assembly> assemblies)
+        protected MetaPatternFactory(IEnumerable<Assembly> assemblies)
         {
             _assemblies = assemblies.ToArray();
             _typeEntryByKey = ImmutableDictionary.Create<TypeKey, TypeEntry>();
@@ -209,14 +209,14 @@ namespace MetaPatterns.Abstractions
                 return (
                     method.IsStatic && 
                     method.IsPublic && 
-                    method.Name.StartsWith(MetaPatternsCompiler.FactoryMethodNamePrefix));
+                    method.Name.StartsWith(MetaPatternCompiler.FactoryMethodNamePrefix));
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             private static int GetFactoryMethodIndex(MethodInfo method)
             {
-                var suffix = method.Name.Substring(MetaPatternsCompiler.FactoryMethodNamePrefix.Length);
+                var suffix = method.Name.Substring(MetaPatternCompiler.FactoryMethodNamePrefix.Length);
                 int index;
                 if (Int32.TryParse(suffix, out index))
                 {

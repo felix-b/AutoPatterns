@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace MetaPatterns.Abstractions
 {
-    public abstract class MetaPatternsCompiler
+    public interface IMetaPatternTemplate
     {
-        public const string FactoryMethodNamePrefix = "FactoryMethod__";
+        void Compile(MetaPatternCompilerContext context);
     }
 }

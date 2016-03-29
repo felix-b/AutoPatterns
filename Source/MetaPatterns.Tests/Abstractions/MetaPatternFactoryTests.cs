@@ -16,7 +16,7 @@ using Shouldly;
 namespace MetaPatterns.Tests.Abstractions
 {
     [TestFixture]
-    public class MetaPatternsFactoryTests
+    public class MetaPatternFactoryTests
     {
         [Test]
         public void CreateObject_ParameterlessConstructor()
@@ -322,7 +322,7 @@ namespace MetaPatterns.Tests.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class TestFactoryOne : MetaPatternsFactory
+        public class TestFactoryOne : MetaPatternFactory
         {
             private readonly List<Type> _typeEntryLog = new List<Type>();
 
@@ -406,7 +406,7 @@ namespace MetaPatterns.Tests.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class TestFactoryTwo : MetaPatternsFactory
+        public class TestFactoryTwo : MetaPatternFactory
         {
             public TestFactoryTwo(Assembly generatedAssembly)
                 : base(new[] { generatedAssembly })

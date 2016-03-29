@@ -40,10 +40,13 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstractions\IMetaPatternsPlatform.cs" />
-    <Compile Include="Abstractions\MetaPatternsCompiler.cs" />
-    <Compile Include="Abstractions\MetaPatternsFactory.cs" />
+    <Compile Include="Abstractions\IMetaPatternCompilerPlatform.cs" />
+    <Compile Include="Abstractions\IMetaPatternTemplate.cs" />
+    <Compile Include="Abstractions\MetaPatternCompiler.cs" />
+    <Compile Include="Abstractions\MetaPatternFactory.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="MetaPatternCompilerContext.cs" />
     <Compile Include="TypeKey.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.MetaType.cs" />
@@ -52,7 +55,9 @@
     <Compile Include="MetaProgram.TypeParam.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Impl\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

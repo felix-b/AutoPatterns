@@ -7,7 +7,7 @@ using MetaPatterns.Abstractions;
 
 namespace MetaPatterns
 {
-    public class Net45MetaPatternsPlatform : IMetaPatternsPlatform
+    public class Net45MetaPatternsPlatform : IMetaPatternCompilerPlatform
     {
     }
 }

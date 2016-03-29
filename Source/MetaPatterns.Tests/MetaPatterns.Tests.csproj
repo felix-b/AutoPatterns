@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MetaPatterns.Tests</RootNamespace>
     <AssemblyName>MetaPatterns.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -108,8 +108,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstractions\MetaPatternsFactoryTests.cs" />
-    <Compile Include="Examples\ExampleAutomaticPropertyFactory.cs" />
+    <Compile Include="Abstractions\MetaPatternFactoryTests.cs" />
     <Compile Include="Examples\ExampleTests.cs" />
     <Compile Include="Examples\ExampleAutomaticProperty.cs" />
     <Compile Include="Examples\ExampleDataContract.cs" />
