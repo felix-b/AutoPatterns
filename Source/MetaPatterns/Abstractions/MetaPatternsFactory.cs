@@ -153,9 +153,9 @@ namespace MetaPatterns.Abstractions
                 var assembly = _assemblies[i];
                 var typeString = (
                     string.IsNullOrEmpty(NamespaceName) ? 
-                    $"{GetClassName(key)}, {assembly.GetName().Name}" : 
-                    $"{NamespaceName}.{GetClassName(key)}, {assembly.GetName().Name}");
-                var type = Type.GetType(typeString, throwOnError: false);
+                    $"{GetClassName(key)}" : 
+                    $"{NamespaceName}.{GetClassName(key)}");
+                var type = assembly.GetType(typeString);
 
                 if (type != null)
                 {

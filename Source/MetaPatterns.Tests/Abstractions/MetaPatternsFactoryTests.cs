@@ -7,6 +7,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MetaPatterns.Abstractions;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Shouldly;
 
@@ -20,7 +23,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -41,7 +44,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -62,7 +65,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -83,7 +86,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -104,7 +107,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -125,7 +128,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -150,7 +153,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -175,7 +178,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
             var stopwatch = Stopwatch.StartNew();
 
             //-- act
@@ -201,7 +204,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
             var stopwatch = Stopwatch.StartNew();
             var byteArray = new byte[] { 1, 2, 3 };
 
@@ -228,7 +231,7 @@ namespace MetaPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactory();
+            var factory = new TestFactoryOne();
 
             //-- act
 
@@ -259,13 +262,73 @@ namespace MetaPatterns.Tests.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class TestFactory : MetaPatternsFactory
+        [Test]
+        public void CanUseAssemblyGeneratedWithRoslyn()
+        {
+            //-- arrange
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(@"
+                namespace MyNamespace {
+                    public class MyClass {
+                        public MyClass(int value) { this.IntValue = value; }
+                        public int IntValue { get; private set; }
+                        public static object FactoryMethod__0(int value) { return new MyClass(value); }
+                    }
+                }
+            ");
+
+            var compilation = CSharpCompilation
+                .Create("MyTest", options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddSyntaxTrees(syntaxTree);
+
+            Assembly generatedAssembly;
+
+            using (var output = new MemoryStream())
+            {
+                EmitResult result = compilation.Emit(output);
+
+                if (!result.Success)
+                {
+                    IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
+                        diagnostic.IsWarningAsError ||
+                        diagnostic.Severity == DiagnosticSeverity.Error);
+
+                    throw new Exception(
+                        "Compile failed:" +
+                        System.Environment.NewLine +
+                        string.Join(System.Environment.NewLine, failures.Select(f => $"{f.Id}: {f.GetMessage()}")));
+                }
+
+                generatedAssembly = Assembly.Load(output.ToArray());
+            }
+
+            var factory = new TestFactoryTwo(generatedAssembly);
+
+            //-- act
+
+            var obj = factory.CreateMyClass(123);
+
+            //-- assert
+
+            obj.ShouldNotBeNull();
+            obj.GetType().Assembly.ShouldBeSameAs(generatedAssembly);
+            obj.GetType().FullName.ShouldBe("MyNamespace.MyClass");
+
+            dynamic dyn = obj;
+            int intValue = dyn.IntValue;
+            intValue.ShouldBe(123);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class TestFactoryOne : MetaPatternsFactory
         {
             private readonly List<Type> _typeEntryLog = new List<Type>();
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public TestFactory()
+            public TestFactoryOne()
                 : base(new[] { Assembly.GetExecutingAssembly() })
             {
             }
@@ -339,6 +402,27 @@ namespace MetaPatterns.Tests.Abstractions
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             protected override string NamespaceName => "";
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class TestFactoryTwo : MetaPatternsFactory
+        {
+            public TestFactoryTwo(Assembly generatedAssembly)
+                : base(new[] { generatedAssembly })
+            {
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public object CreateMyClass(int value)
+            {
+                return base.CreateInstance<int>(new TypeKey<string>("MyClass"), constructorIndex: 0, arg1: value);
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            protected override string NamespaceName => "MyNamespace";
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
