@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MetaPatterns.Abstractions;
 using MetaPatterns.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,15 +13,15 @@ namespace MetaPatterns
 {
     public class MetaPatternCompilerContext
     {
-        internal MetaPatternCompilerContext(TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
+        internal MetaPatternCompilerContext(MetaPatternCompiler compiler, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
             this.Input = new InputContext(
                 typeKey, 
                 baseType, 
-                ImmutableArray.Create<Type>(primaryInterfaces.OrEmptyTypes()),
-                ImmutableArray.Create<Type>(secondaryInterfaces.OrEmptyTypes()));
+                primaryInterfaces.OrEmptyTypes(),
+                secondaryInterfaces.OrEmptyTypes());
 
-            this.Output = new OutputContext();
+            this.Output = new OutputContext(compiler, typeKey);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,7 +33,7 @@ namespace MetaPatterns
 
         public class InputContext
         {
-            public InputContext(TypeKey typeKey, Type baseType, ImmutableArray<Type> primaryInterfaces, ImmutableArray<Type> secondaryInterfaces)
+            public InputContext(TypeKey typeKey, Type baseType, IReadOnlyList<Type> primaryInterfaces, IReadOnlyList<Type> secondaryInterfaces)
             {
                 TypeKey = typeKey;
                 BaseType = baseType;
@@ -44,20 +45,24 @@ namespace MetaPatterns
 
             public TypeKey TypeKey { get; private set; }
             public Type BaseType { get; private set; }
-            public ImmutableArray<Type> PrimaryInterfaces { get; private set; }
-            public ImmutableArray<Type> SecondaryInterfaces { get; private set; }
+            public IReadOnlyList<Type> PrimaryInterfaces { get; private set; }
+            public IReadOnlyList<Type> SecondaryInterfaces { get; private set; }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public class OutputContext
         {
-            internal OutputContext()
+            internal OutputContext(MetaPatternCompiler compiler, TypeKey typeKey)
             {
+                this.ClassNamespace = compiler.NamespaceName;
+                this.ClassName = typeKey.ToString();
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
-
+            
+            public string ClassNamespace { get; private set; }
+            public string ClassName { get; private set; }
             public List<BaseTypeSyntax> BaseTypes { get; } = new List<BaseTypeSyntax>();
             public List<FieldDeclarationSyntax> Fields { get; } = new List<FieldDeclarationSyntax>();
             public List<ConstructorDeclarationSyntax> Constructors { get; } = new List<ConstructorDeclarationSyntax>();
@@ -65,6 +70,20 @@ namespace MetaPatterns
             public List<PropertyDeclarationSyntax> Properties { get; } = new List<PropertyDeclarationSyntax>();
             public List<IndexerDeclarationSyntax> Indexers { get; } = new List<IndexerDeclarationSyntax>();
             public List<EventDeclarationSyntax> Events { get; } = new List<EventDeclarationSyntax>();
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            internal MemberDeclarationSyntax[] GetAllMembers()
+            {
+                return 
+                    Fields.Cast<MemberDeclarationSyntax>()
+                    .Concat(Constructors.Cast<MemberDeclarationSyntax>()
+                    .Concat(Methods.Cast<MemberDeclarationSyntax>()
+                    .Concat(Properties.Cast<MemberDeclarationSyntax>()
+                    .Concat(Indexers.Cast<MemberDeclarationSyntax>()
+                    .Concat(Events.Cast<MemberDeclarationSyntax>())))))
+                    .ToArray();
+            }
         }
     }
 }

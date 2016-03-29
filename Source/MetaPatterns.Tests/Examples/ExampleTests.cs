@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using MetaPatterns.Abstractions;
 using MetaPatterns.Tests.Repo;
 using NUnit.Framework;
@@ -16,10 +17,19 @@ namespace MetaPatterns.Tests.Examples
             //-- arrange
 
             var compiler = new ExampleAutomaticPropertyCompiler(new Net45MetaPatternsPlatform());
+            compiler.CompileExampleObject();
+
+            var assembly = MetaPatternCompiler.CompileAndLoadAssembly(new MetaPatternCompiler[] { compiler });
+            var factory = new ExampleAutomaticPropertyFactory(assembly);
+
+            dynamic obj = factory.CreateExampleObject();
+            obj.IntValue = 123;
+            int value = obj.IntValue;
+            value.ShouldBe(123);
 
             ////-- act
 
-            //IHaveScalarProperties obj = factory.CreateInstance<IHaveScalarProperties>();
+            //IHaveScalarProperties obj = factory.CreateExampleObject();
             //obj.IntValue = 123;
             //obj.StringValue = "ABC";
             //obj.EnumValue = DayOfWeek.Thursday;
@@ -44,11 +54,35 @@ namespace MetaPatterns.Tests.Examples
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
+            public void CompileExampleObject()
+            {
+                BuildSyntax(new TypeKey<int>(123));
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
             protected override IMetaPatternTemplate[] BuildPipeline(MetaPatternCompilerContext context)
             {
                 return new IMetaPatternTemplate[] {
                     new ExampleAutomaticProperty()
                 };
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class ExampleAutomaticPropertyFactory : MetaPatternFactory
+        {
+            public ExampleAutomaticPropertyFactory(params Assembly[] assemblies)
+                : base(assemblies)
+            {
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public object CreateExampleObject()
+            {
+                return base.CreateInstance(new TypeKey<int>(123), constructorIndex: 0);
             }
         }
     }
