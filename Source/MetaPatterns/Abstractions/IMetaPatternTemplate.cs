@@ -8,6 +8,6 @@ namespace MetaPatterns.Abstractions
 {
     public interface IMetaPatternTemplate
     {
-        void Compile(MetaPatternCompilerContext context);
+        void Apply(MetaPatternCompilerContext context);
     }
 }

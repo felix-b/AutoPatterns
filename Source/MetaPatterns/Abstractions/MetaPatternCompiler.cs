@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MetaPatterns.Extensions;
+using MetaPatterns.Impl;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -86,7 +87,7 @@ namespace MetaPatterns.Abstractions
 
             for (int i = 0; i < pipeline.Length; i++)
             {
-                pipeline[i].Compile(context);
+                pipeline[i].Apply(context);
             }
 
             var syntax = GetFinalSyntax(context);
@@ -97,13 +98,7 @@ namespace MetaPatterns.Abstractions
 
         private MemberDeclarationSyntax GetFinalSyntax(MetaPatternCompilerContext context)
         {
-            context.Output.Methods.Add(
-                MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier("FactoryMethod__0"))
-                    .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
-                    .WithBody(Block(SingletonList<StatementSyntax>(
-                        ReturnStatement(ObjectCreationExpression(IdentifierName(context.Output.ClassName)).WithArgumentList(ArgumentList()))
-                    )))
-            );
+            AddFactoryMethods(context);
 
             return 
                 NamespaceDeclaration(IdentifierName(context.Output.ClassNamespace))
@@ -121,6 +116,54 @@ namespace MetaPatterns.Abstractions
                         }
                     )
                 );
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void AddFactoryMethods(MetaPatternCompilerContext context)
+        {
+            var constructorList = context.Output.Constructors;
+
+            if (constructorList.Count > 0)
+            {
+                for (int index = 0 ; index < constructorList.Count; index++)
+                {
+                    AddFactoryMethod(context, constructorList[index], index);
+                }
+            }
+            else
+            {
+                AddDefaultFactoryMethod(context);
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void AddFactoryMethod(MetaPatternCompilerContext context, ConstructorDeclarationSyntax constructor, int index)
+        {
+            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier($"FactoryMethod__{index}"))
+                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
+                .WithParameterList(constructor.ParameterList)
+                .WithBody(Block(SingletonList<StatementSyntax>(
+                    ReturnStatement(
+                        ObjectCreationExpression(IdentifierName(context.Output.ClassName))
+                            .WithArgumentList(SyntaxHelper.CopyParametersToArguments(constructor.ParameterList)))
+                 )));
+
+            context.Output.Methods.Add(factoryMethod);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void AddDefaultFactoryMethod(MetaPatternCompilerContext context)
+        {
+            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier("FactoryMethod__0"))
+                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
+                .WithBody(Block(SingletonList<StatementSyntax>(
+                    ReturnStatement(ObjectCreationExpression(IdentifierName(context.Output.ClassName)).WithArgumentList(ArgumentList())))
+                ));
+
+            context.Output.Methods.Add(factoryMethod);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
