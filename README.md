@@ -1,10 +1,10 @@
-# MetaPatterns
+# AutoPatterns
 A Roslyn-based meta-programming library, which automatically generates implementations of design patterns and abstractions through pipelines of reusable templates.
 
 ## Why another meta-programming library
 
 ### Powerful
-**MetaPatterns** comes equipped with happy paths for the following use cases:
+**AutoPatterns** comes equipped with happy paths for the following use cases:
   - Implement a well-known abstraction (e.g. IComparable, IFormattable). Implement/override known members. 
   - Implement an abstraction which is not known in advance (e.g. ICustomerEntity, IInventoryService). Implement/override discovered members, be prepared for any types and signatures.
   - Declare and implement any member, not limited to those declared by interfaces or a base type.
@@ -15,14 +15,14 @@ A Roslyn-based meta-programming library, which automatically generates implement
   - Provide delegates to factory methods for instantiation of generated types. Ability to have multiple constructors per type.
 
 ### Easy to learn and fun to use
-With **MetaPatterns**, code templates are written in T4-like WYSIWYG concept. Yet, they differ from T4 templates, in that:
+With **AutoPatterns**, code templates are written in T4-like WYSIWYG concept. Yet, they differ from T4 templates, in that:
 - They are regular classes written in C#, just like any other class in your project. You can use coding tools you normally do, e.g. code navigation, IntelliSense, refactorings.
 - They don't have to be monolithic. Each template in a pipeline can (and should) take responsibility of a specific aspect, adding up to the complete implementation. Different templates can implement distinct sets of members, as well as decorate or transform implementation code accumulated by far. 
 - While each pipeline is aimed to produce a specific kind of objects (e.g. data entities or configuration sections), the templates are the building blocks which can be reused among the different pipelines.
 
 ### Opens up modularity and customization scenarios
 
-With **MetaPatterns**, code generation takes place at run-time, not at design- or compile-time. This opens up interesting possibilities:
+With **AutoPatterns**, code generation takes place at run-time, not at design- or compile-time. This opens up interesting possibilities:
 - The code being generated may depend on -- for example, be extended by -- a set of modules configured to load in a specific deployment. 
 - Pluggable aspect-oriented composition of application can be achieved by sharing binaries, rather than by sharing code. 
 - The need to manage multiple branches of customized codebases can be eliminated. All extension/customization modules can reside in the main codebase, and only multiple deployment configurations must be managed.  
