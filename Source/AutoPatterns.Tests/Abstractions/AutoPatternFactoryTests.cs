@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoPatterns.Abstractions;
+using AutoPatterns.Impl;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -406,7 +407,7 @@ namespace AutoPatterns.Tests.Abstractions
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override string NamespaceName => "";
+            protected override string _namespaceName => "";
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -427,7 +428,7 @@ namespace AutoPatterns.Tests.Abstractions
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override string NamespaceName => "MyNamespace";
+            protected override string _namespaceName => "MyNamespace";
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoPatterns.Abstractions;
 using AutoPatterns.Extensions;
+using AutoPatterns.Impl;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AutoPatterns

@@ -3,27 +3,28 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using AutoPatterns.Extensions;
 
-namespace AutoPatterns.Abstractions
+namespace AutoPatterns.Impl
 {
-    public abstract class AutoPatternFactory
+    public sealed class AutoPatternFactory
     {
         private readonly object _syncRoot = new object();
         private readonly Assembly[] _assemblies;
+        private readonly string _namespaceName; //=> this.GetType().Name.TrimSuffix("Factory");
         private ImmutableDictionary<TypeKey, TypeEntry> _typeEntryByKey;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected AutoPatternFactory(IEnumerable<Assembly> assemblies)
+        public AutoPatternFactory(IEnumerable<Assembly> assemblies, string namespaceName)
         {
             _assemblies = assemblies.ToArray();
+            _namespaceName = namespaceName;
             _typeEntryByKey = ImmutableDictionary.Create<TypeKey, TypeEntry>();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance(TypeKey key, int constructorIndex)
+        public object CreateInstance(TypeKey key, int constructorIndex)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<object>)typeEntry.FactoryMethods[constructorIndex];
@@ -32,7 +33,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1>(TypeKey key, int constructorIndex, T1 arg1)
+        public object CreateInstance<T1>(TypeKey key, int constructorIndex, T1 arg1)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -41,7 +42,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2)
+        public object CreateInstance<T1, T2>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -50,7 +51,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3)
+        public object CreateInstance<T1, T2, T3>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -59,7 +60,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3, T4>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        public object CreateInstance<T1, T2, T3, T4>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, T4, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -68,7 +69,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3, T4, T5>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+        public object CreateInstance<T1, T2, T3, T4, T5>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, T4, T5, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -77,7 +78,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3, T4, T5, T6>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+        public object CreateInstance<T1, T2, T3, T4, T5, T6>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, T4, T5, T6, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -86,7 +87,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3, T4, T5, T6, T7>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+        public object CreateInstance<T1, T2, T3, T4, T5, T6, T7>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, T4, T5, T6, T7, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -95,7 +96,7 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected object CreateInstance<T1, T2, T3, T4, T5, T6, T7, T8>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8)
+        public object CreateInstance<T1, T2, T3, T4, T5, T6, T7, T8>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8)
         {
             var typeEntry = GetOrAddTypeEntry(key);
             var factoryMethod = (Func<T1, T2, T3, T4, T5, T6, T7, T8, object>)typeEntry.FactoryMethods[constructorIndex];
@@ -104,20 +105,18 @@ namespace AutoPatterns.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual string GetClassName(TypeKey key)
+        public string GetClassName(TypeKey key)
         {
             return key.ToString();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual void OnTypeEntryCreated(TypeEntry entry)
-        {
-        }
+        public string NamespaceName => _namespaceName;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual string NamespaceName => this.GetType().Name.TrimSuffix("Factory");
+        public event EventHandler<TypeEventArgs> TypeEntryCreated;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -135,7 +134,8 @@ namespace AutoPatterns.Abstractions
                         var type = GetTypeFromAssembliesOrThrow(key);
                         entry = new TypeEntry(key, type.GetTypeInfo());
                         _typeEntryByKey = _typeEntryByKey.Add(key, entry);
-                        OnTypeEntryCreated(entry);
+
+                        TypeEntryCreated?.Invoke(this, new TypeEventArgs(entry.Key, entry.Type));
                     }
                 }
             }
@@ -151,9 +151,9 @@ namespace AutoPatterns.Abstractions
             {
                 var assembly = _assemblies[i];
                 var typeString = (
-                    string.IsNullOrEmpty(NamespaceName) ? 
+                    string.IsNullOrEmpty(_namespaceName) ? 
                     $"{GetClassName(key)}" : 
-                    $"{NamespaceName}.{GetClassName(key)}");
+                    $"{_namespaceName}.{GetClassName(key)}");
                 var type = assembly.GetType(typeString);
 
                 if (type != null)
@@ -162,15 +162,15 @@ namespace AutoPatterns.Abstractions
                 }
             }
 
-            throw new AggregateException($"Type '{NamespaceName}.{GetClassName(key)}' cannot be found in any of factory source assemblies.");
+            throw new AggregateException($"Type '{_namespaceName}.{GetClassName(key)}' cannot be found in any of factory source assemblies.");
         }
 
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal protected class TypeEntry
+        public class TypeEntry
         {
-            public TypeEntry(TypeKey key, TypeInfo type)
+            internal TypeEntry(TypeKey key, TypeInfo type)
             {
                 this.Key = key;
                 this.Type = type;

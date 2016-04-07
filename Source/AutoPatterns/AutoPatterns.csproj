@@ -101,11 +101,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\IAutoPatternTemplate.cs" />
-    <Compile Include="Abstractions\AutoPatternCompiler.cs" />
-    <Compile Include="Abstractions\AutoPatternFactory.cs" />
+    <Compile Include="Impl\AutoPatternCompiler.cs" />
+    <Compile Include="Impl\AutoPatternFactory.cs" />
+    <Compile Include="Abstractions\TemplateMemberMatcher.cs" />
+    <Compile Include="AutoPattern.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Impl\SyntaxHelper.cs" />
+    <Compile Include="TypeEventArgs.cs" />
     <Compile Include="MetaCompilerContext.cs" />
     <Compile Include="MetaProgram.Annotation.cs" />
     <Compile Include="MetaProgram.Constant.cs" />

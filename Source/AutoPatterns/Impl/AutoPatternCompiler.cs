@@ -5,15 +5,14 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using AutoPatterns.Abstractions;
 using AutoPatterns.Extensions;
-using AutoPatterns.Impl;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace AutoPatterns.Abstractions
+namespace AutoPatterns.Impl
 {
     public abstract class AutoPatternCompiler
     {
@@ -125,16 +124,16 @@ namespace AutoPatterns.Abstractions
             AddFactoryMethods(context);
 
             return 
-                SyntaxFactory.NamespaceDeclaration(IdentifierName(context.Output.ClassNamespace))
+                SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(context.Output.ClassNamespace))
                 .WithUsings(
                     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System")))
                 )
                 .WithMembers(
                     SyntaxFactory.List<MemberDeclarationSyntax>(
                         new MemberDeclarationSyntax[] {
-                            ClassDeclaration(context.Output.ClassName)
+                            SyntaxFactory.ClassDeclaration(context.Output.ClassName)
                                 .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                                .WithBaseList(SyntaxFactory.BaseList(SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
+                                .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
                                 .WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>(
                                     context.Output.GetAllMembers()
                                 ))
@@ -171,7 +170,7 @@ namespace AutoPatterns.Abstractions
                 .WithParameterList(constructor.ParameterList)
                 .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
                     SyntaxFactory.ReturnStatement(
-                        SyntaxFactory.ObjectCreationExpression(IdentifierName(context.Output.ClassName))
+                        SyntaxFactory.ObjectCreationExpression(SyntaxFactory.IdentifierName(context.Output.ClassName))
                             .WithArgumentList(SyntaxHelper.CopyParametersToArguments(constructor.ParameterList)))
                  )));
 
@@ -185,7 +184,7 @@ namespace AutoPatterns.Abstractions
             var factoryMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)), SyntaxFactory.Identifier("FactoryMethod__0"))
                 .WithModifiers(SyntaxFactory.TokenList(new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword) }))
                 .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
-                    SyntaxFactory.ReturnStatement(SyntaxFactory.ObjectCreationExpression(IdentifierName(context.Output.ClassName)).WithArgumentList(SyntaxFactory.ArgumentList())))
+                    SyntaxFactory.ReturnStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactory.IdentifierName(context.Output.ClassName)).WithArgumentList(SyntaxFactory.ArgumentList())))
                 ));
 
             context.Output.Methods.Add(factoryMethod);
