@@ -7,6 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPatterns", "AutoPattern
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPatterns.Tests", "AutoPatterns.Tests\AutoPatterns.Tests.csproj", "{60D3207A-07D0-4578-B75D-6F275B151A46}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{1FB74F89-D629-4957-9D74-5909162D31EE}"
+	ProjectSection(SolutionItems) = preProject
+		AutoPatterns.nuspec = AutoPatterns.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
