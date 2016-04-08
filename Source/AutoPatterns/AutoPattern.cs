@@ -6,81 +6,163 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using AutoPatterns.Abstractions;
+using AutoPatterns.Extensions;
 using AutoPatterns.Impl;
 
 namespace AutoPatterns
 {
     public abstract class AutoPattern
     {
-        private readonly Compiler _compiler;
-        private Factory  _compiler;
-
-        protected abstract IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context);
+        private readonly string _namespaceName;
+        private readonly AutoPatternCompiler _compiler;
+        private readonly AutoPatternFactory _factory;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual Compiler CreateCompiler()
+        protected AutoPattern(AutoPatternLibrary library, string namespaceName = null)
         {
-            return new Compiler(this);
+            _namespaceName = namespaceName ?? this.GetType().Name.TrimSuffix("Pattern");
+            _compiler = new AutoPatternCompiler(library, namespaceName, PrivateBuildPipeline);
+            _factory = new AutoPatternFactory(library, namespaceName, GetClassName, OnTypeBound);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual Factory CreateFactory(IEnumerable<Assembly> assemblies)
+        public virtual string GetClassName(TypeKey key)
         {
-            return new Factory(assemblies);
+            return key.ToString();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected class Compiler : AutoPatternCompiler
-        {
-            private readonly AutoPattern _ownerPattern;
+        public string NamespaceName => _namespaceName;
 
-            public Compiler(AutoPattern ownerPattern)
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public event EventHandler<TypeEventArgs> TypeBound;
+        public event EventHandler<PipelineEventArgs> BuildingPipeline;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected virtual void OnTypeBound(TypeKey key, Type type)
+        {
+            TypeBound?.Invoke(this, new TypeEventArgs(key, type));
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected abstract IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context, Pipeline pipeline);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected AutoPatternCompiler Compiler => _compiler;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected AutoPatternFactory Factory => _factory;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private IAutoPatternTemplate[] PrivateBuildPipeline(MetaCompilerContext context)
+        {
+            var pipeline = new Pipeline();
+
+            BuildPipeline(context, pipeline);
+            BuildingPipeline?.Invoke(this, new PipelineEventArgs(pipeline));
+
+            return pipeline.ToArray();
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class Pipeline
+        {
+            private readonly List<IAutoPatternTemplate> _sinks = new List<IAutoPatternTemplate>();
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertFirst(params IAutoPatternTemplate[] templates)
             {
-                _ownerPattern = ownerPattern;
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertLast(params IAutoPatternTemplate[] templates)
+            {
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertBefore<TTemplate>(params IAutoPatternTemplate[] templates)
+                where TTemplate : IAutoPatternTemplate
+            {
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertAfter<TTemplate>(params IAutoPatternTemplate[] templates)
+                where TTemplate : IAutoPatternTemplate
+            {
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void Remove<TTemplate>() 
+                where TTemplate : IAutoPatternTemplate
+            {
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void Replace<TTemplate>(params IAutoPatternTemplate[] replacingTemplates)
+                where TTemplate : IAutoPatternTemplate
+            {
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public bool HasTemplate<TTemplate>()
+                where TTemplate : IAutoPatternTemplate
+            {
+                return false;
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public IAutoPatternTemplate[] ToArray()
+            {
+                return _sinks.ToArray();
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class PipelineEventArgs : EventArgs
+        {
+            public PipelineEventArgs(Pipeline pipeline)
+            {
+                Pipeline = pipeline;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            #region Overrides of AutoPatternCompiler
-
-            protected override IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context)
-            {
-                return _ownerPattern.BuildPipeline(context);
-            }
-
-            #endregion
+            public Pipeline Pipeline { get; private set; }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected class Factory : AutoPatternFactory
+        public class TypeEventArgs : EventArgs
         {
-            public Factory(IEnumerable<Assembly> assemblies)
-                : base(assemblies)
+            public TypeEventArgs(TypeKey typeKey, Type type)
             {
+                TypeKey = typeKey;
+                Type = type;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public new object CreateInstance(TypeKey key, int constructorIndex)
-            {
-                return base.CreateInstance(key, constructorIndex);
-            }
-            public new object CreateInstance<T1>(TypeKey key, int constructorIndex, T1 arg1)
-            {
-                return base.CreateInstance<T1>(key, constructorIndex, arg1);
-            }
-            public new object CreateInstance<T1, T2>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2)
-            {
-                return base.CreateInstance<T1, T2>(key, constructorIndex, arg1, arg2);
-            }
-            public new object CreateInstance<T1, T2, T3>(TypeKey key, int constructorIndex, T1 arg1, T2 arg2, T3 arg3)
-            {
-                return base.CreateInstance<T1, T2, T3>(key, constructorIndex, arg1, arg2, arg3);
-            }
+            public TypeKey TypeKey { get; private set; }
+            public Type Type { get; private set; }
         }
     }
 }

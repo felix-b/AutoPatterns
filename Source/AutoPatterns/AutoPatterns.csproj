@@ -108,13 +108,13 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Impl\SyntaxHelper.cs" />
-    <Compile Include="TypeEventArgs.cs" />
     <Compile Include="MetaCompilerContext.cs" />
     <Compile Include="MetaProgram.Annotation.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.cs" />
     <Compile Include="MetaProgram.MetaType.cs" />
     <Compile Include="MetaProgram.TypeParam.cs" />
+    <Compile Include="Impl\AutoPatternLibrary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeKey.cs" />
   </ItemGroup>

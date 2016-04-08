@@ -11,28 +11,34 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Impl
 {
-    public abstract class AutoPatternCompiler
+    public sealed class AutoPatternCompiler
     {
         public const string FactoryMethodNamePrefix = "FactoryMethod__";
-        public const string DefaultAssemblyName = "MetaPatterns.GeneratedTypes";
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        private readonly string _namespaceName;
+        private readonly Func<MetaCompilerContext, IAutoPatternTemplate[]> _onBuildPipeline;
         private readonly ConcurrentDictionary<TypeKey, MemberDeclarationSyntax> _syntaxCache;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected AutoPatternCompiler()
+        public AutoPatternCompiler(AutoPatternLibrary library, string namespaceName, Func<MetaCompilerContext, IAutoPatternTemplate[]> onBuildPipeline)
         {
+            _namespaceName = namespaceName;
+            _onBuildPipeline = onBuildPipeline;
             _syntaxCache = new ConcurrentDictionary<TypeKey, MemberDeclarationSyntax>();
+
+            library.AddCompiler(this);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected void BuildSyntax(TypeKey typeKey, Type baseType = null, Type primaryInterface = null)
+        public void BuildSyntax(TypeKey typeKey, Type baseType = null, Type primaryInterface = null)
         {
             BuildSyntax(
                 typeKey, 
@@ -43,7 +49,7 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected void BuildSyntax(TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
+        public void BuildSyntax(TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
             _syntaxCache.GetOrAdd(
                 typeKey, 
@@ -52,18 +58,15 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal void ExportAllSyntaxes(out MemberDeclarationSyntax[] members)
+        internal void TakeAllSyntax(out MemberDeclarationSyntax[] members)
         {
             members = _syntaxCache.Values.ToArray();
+            _syntaxCache.Clear();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected abstract IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context);
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        protected internal virtual string NamespaceName => this.GetType().Name.TrimSuffix("Compiler");
+        public string NamespaceName => _namespaceName;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -74,7 +77,7 @@ namespace AutoPatterns.Impl
             Type[] secondaryInterfaces)
         {
             var context = new MetaCompilerContext(this, typeKey, baseType, primaryInterfaces, secondaryInterfaces);
-            var pipeline = BuildPipeline(context);
+            var pipeline = _onBuildPipeline(context);
 
             PreBuildSyntax(context);
 
@@ -114,7 +117,7 @@ namespace AutoPatterns.Impl
         private void AddBaseType(Type type, MetaCompilerContext context)
         {
             EnsureMetadataReference(type);
-            context.Output.BaseTypes.Add(SyntaxFactory.SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
+            context.Output.BaseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,17 +127,17 @@ namespace AutoPatterns.Impl
             AddFactoryMethods(context);
 
             return 
-                SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(context.Output.ClassNamespace))
+                NamespaceDeclaration(IdentifierName(context.Output.ClassNamespace))
                 .WithUsings(
-                    SyntaxFactory.SingletonList<UsingDirectiveSyntax>(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName("System")))
+                    SingletonList<UsingDirectiveSyntax>(UsingDirective(IdentifierName("System")))
                 )
                 .WithMembers(
-                    SyntaxFactory.List<MemberDeclarationSyntax>(
+                    List<MemberDeclarationSyntax>(
                         new MemberDeclarationSyntax[] {
-                            SyntaxFactory.ClassDeclaration(context.Output.ClassName)
-                                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                                .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
-                                .WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>(
+                            ClassDeclaration(context.Output.ClassName)
+                                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                                .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
+                                .WithMembers(List<MemberDeclarationSyntax>(
                                     context.Output.GetAllMembers()
                                 ))
                         }
@@ -165,12 +168,12 @@ namespace AutoPatterns.Impl
 
         private void AddFactoryMethod(MetaCompilerContext context, ConstructorDeclarationSyntax constructor, int index)
         {
-            var factoryMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)), SyntaxFactory.Identifier($"FactoryMethod__{index}"))
-                .WithModifiers(SyntaxFactory.TokenList(new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword) }))
+            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier($"FactoryMethod__{index}"))
+                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
                 .WithParameterList(constructor.ParameterList)
-                .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
-                    SyntaxFactory.ReturnStatement(
-                        SyntaxFactory.ObjectCreationExpression(SyntaxFactory.IdentifierName(context.Output.ClassName))
+                .WithBody(Block(SingletonList<StatementSyntax>(
+                    ReturnStatement(
+                        ObjectCreationExpression(IdentifierName(context.Output.ClassName))
                             .WithArgumentList(SyntaxHelper.CopyParametersToArguments(constructor.ParameterList)))
                  )));
 
@@ -181,10 +184,10 @@ namespace AutoPatterns.Impl
 
         private void AddDefaultFactoryMethod(MetaCompilerContext context)
         {
-            var factoryMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword)), SyntaxFactory.Identifier("FactoryMethod__0"))
-                .WithModifiers(SyntaxFactory.TokenList(new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword) }))
-                .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
-                    SyntaxFactory.ReturnStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactory.IdentifierName(context.Output.ClassName)).WithArgumentList(SyntaxFactory.ArgumentList())))
+            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier("FactoryMethod__0"))
+                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
+                .WithBody(Block(SingletonList<StatementSyntax>(
+                    ReturnStatement(ObjectCreationExpression(IdentifierName(context.Output.ClassName)).WithArgumentList(ArgumentList())))
                 ));
 
             context.Output.Methods.Add(factoryMethod);
@@ -197,7 +200,7 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static byte[] CompileAssembly(AutoPatternCompiler[] compilers, string assemblyName = null)
+        internal static bool CompileAssembly(AutoPatternCompiler[] compilers, string assemblyName, out byte[] assemblyBytes)
         {
             if (compilers == null)
             {
@@ -216,31 +219,46 @@ namespace AutoPatterns.Impl
                 IncludeExportsFromCompiler(compiler, allMembers);
             }
 
-            var syntaxTree = SyntaxFactory.SyntaxTree(SyntaxFactory.CompilationUnit().WithMembers(SyntaxFactory.List<MemberDeclarationSyntax>(allMembers)).NormalizeWhitespace());
+            if (allMembers.Count == 0)
+            {
+                assemblyBytes = null;
+                return false;
+            }
+
+            var syntaxTree = SyntaxTree(CompilationUnit()
+                .WithMembers(List(allMembers))
+                .NormalizeWhitespace());
 
             //Console.WriteLine(syntaxTree.ToString());
 
             var compilation = CSharpCompilation
-                .Create(assemblyName ?? DefaultAssemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .Create(assemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(_s_referenceCache.Values)
                 .AddSyntaxTrees(syntaxTree);
 
-            var assemblyBytes = EmitAssemblyBytes(compilation);
-            return assemblyBytes;
+            assemblyBytes = EmitAssemblyBytes(compilation);
+            return true;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static Assembly CompileAndLoadAssembly(AutoPatternCompiler[] compilers)
+        internal static bool CompileAndLoadAssembly(AutoPatternCompiler[] compilers, string assemblyName, out Assembly compiledAssembly)
         {
-            var bytes = CompileAssembly(compilers);
-            var assembly = Assembly.Load(bytes);
-            return assembly;
+            byte[] assemblyBytes;
+
+            if (CompileAssembly(compilers, assemblyName, out assemblyBytes))
+            {
+                compiledAssembly = Assembly.Load(assemblyBytes);
+                return true;
+            }
+
+            compiledAssembly = null;
+            return false;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal protected static MetadataReference EnsureMetadataReference(Assembly assembly)
+        internal static MetadataReference EnsureMetadataReference(Assembly assembly)
         {
             var cacheKey = assembly.FullName;
             MetadataReference reference;
@@ -262,7 +280,7 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal protected static MetadataReference EnsureMetadataReference(Type type)
+        internal static MetadataReference EnsureMetadataReference(Type type)
         {
             return EnsureMetadataReference(type.GetTypeInfo().Assembly);
         }
@@ -274,7 +292,7 @@ namespace AutoPatterns.Impl
             List<MemberDeclarationSyntax> allMembers)
         {
             MemberDeclarationSyntax[] members;
-            compiler.ExportAllSyntaxes(out members);
+            compiler.TakeAllSyntax(out members);
             allMembers.AddRange(members);
         }
 

@@ -9,16 +9,24 @@ namespace AutoPatterns.Impl
     public sealed class AutoPatternFactory
     {
         private readonly object _syncRoot = new object();
-        private readonly Assembly[] _assemblies;
+        private readonly AutoPatternLibrary _library;
         private readonly string _namespaceName; //=> this.GetType().Name.TrimSuffix("Factory");
+        private readonly Func<TypeKey, string> _onGetClassName;
+        private readonly Action<TypeKey, Type> _onTypeBound;
         private ImmutableDictionary<TypeKey, TypeEntry> _typeEntryByKey;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AutoPatternFactory(IEnumerable<Assembly> assemblies, string namespaceName)
+        public AutoPatternFactory(
+            AutoPatternLibrary library, 
+            string namespaceName, 
+            Func<TypeKey, string> onGetClassName = null, 
+            Action<TypeKey, Type> onTypeBound = null)
         {
-            _assemblies = assemblies.ToArray();
+            _library = library;
             _namespaceName = namespaceName;
+            _onGetClassName = onGetClassName ?? (key => key.ToString());
+            _onTypeBound = onTypeBound;
             _typeEntryByKey = ImmutableDictionary.Create<TypeKey, TypeEntry>();
         }
 
@@ -107,16 +115,12 @@ namespace AutoPatterns.Impl
 
         public string GetClassName(TypeKey key)
         {
-            return key.ToString();
+            return _onGetClassName(key);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public string NamespaceName => _namespaceName;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public event EventHandler<TypeEventArgs> TypeEntryCreated;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -131,11 +135,11 @@ namespace AutoPatterns.Impl
                 {
                     if (!_typeEntryByKey.TryGetValue(key, out entry))
                     {
-                        var type = GetTypeFromAssembliesOrThrow(key);
+                        var type = GetTypeFromLibraryOrThrow(key);
                         entry = new TypeEntry(key, type.GetTypeInfo());
                         _typeEntryByKey = _typeEntryByKey.Add(key, entry);
 
-                        TypeEntryCreated?.Invoke(this, new TypeEventArgs(entry.Key, entry.Type));
+                        _onTypeBound?.Invoke(entry.Key, entry.Type);
                     }
                 }
             }
@@ -145,14 +149,38 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private Type GetTypeFromAssembliesOrThrow(TypeKey key)
+        private Type GetTypeFromLibraryOrThrow(TypeKey key)
         {
-            for (int i = 0 ; i < _assemblies.Length ; i++)
+            var type = TryGetTypeFromLibrary(key);
+
+            if (type != null)
             {
-                var assembly = _assemblies[i];
+                return type;
+            }
+
+            _library.CompileAddedSyntaxes();
+            type = TryGetTypeFromLibrary(key);
+
+            if (type != null)
+            {
+                return type;
+            }
+
+            throw new AggregateException($"Type '{_namespaceName}.{GetClassName(key)}' cannot be found in any of library assemblies.");
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private Type TryGetTypeFromLibrary(TypeKey key)
+        {
+            var assemblies = _library.Assemblies;
+
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                var assembly = assemblies[i];
                 var typeString = (
-                    string.IsNullOrEmpty(_namespaceName) ? 
-                    $"{GetClassName(key)}" : 
+                    string.IsNullOrEmpty(_namespaceName) ?
+                    $"{GetClassName(key)}" :
                     $"{_namespaceName}.{GetClassName(key)}");
                 var type = assembly.GetType(typeString);
 
@@ -162,9 +190,8 @@ namespace AutoPatterns.Impl
                 }
             }
 
-            throw new AggregateException($"Type '{_namespaceName}.{GetClassName(key)}' cannot be found in any of factory source assemblies.");
+            return null;
         }
-
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
