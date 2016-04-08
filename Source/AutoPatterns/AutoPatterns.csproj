@@ -101,14 +101,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\IAutoPatternTemplate.cs" />
-    <Compile Include="Runtime\AutoPatternCompiler.cs" />
+    <Compile Include="Runtime\AutoPatternWriter.cs" />
     <Compile Include="Runtime\AutoPatternFactory.cs" />
     <Compile Include="Abstractions\TemplateMemberMatcher.cs" />
     <Compile Include="AutoPattern.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Extensions\SyntaxHelper.cs" />
-    <Compile Include="Runtime\MetaCompilerContext.cs" />
+    <Compile Include="Runtime\AutoPatternWriterContext.cs" />
     <Compile Include="MetaProgram.Annotation.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.cs" />

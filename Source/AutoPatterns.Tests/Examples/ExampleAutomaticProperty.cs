@@ -18,7 +18,7 @@ namespace AutoPatterns.Tests.Examples
 
     public partial class ExampleAutomaticProperty : IAutoPatternTemplate
     {
-        void IAutoPatternTemplate.Apply(MetaCompilerContext context)
+        void IAutoPatternTemplate.Apply(AutoPatternWriterContext context)
         {
             foreach (var interfaceType in context.Input.PrimaryInterfaces)
             {
@@ -34,33 +34,33 @@ namespace AutoPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool Template__ShouldApply(MetaCompilerContext context)
+        private bool Template__ShouldApply(AutoPatternWriterContext context)
         {
             return true;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void Template__BeginApply(MetaCompilerContext context)
+        private void Template__BeginApply(AutoPatternWriterContext context)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void Template__EndApply(MetaCompilerContext context)
+        private void Template__EndApply(AutoPatternWriterContext context)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool Match__AProperty(MetaCompilerContext context, PropertyInfo declaration)
+        private bool Match__AProperty(AutoPatternWriterContext context, PropertyInfo declaration)
         {
             return (declaration.CanRead && declaration.CanWrite && declaration.GetIndexParameters().Length == 0);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void Apply__AProperty(MetaCompilerContext context, PropertyInfo declaration)
+        private void Apply__AProperty(AutoPatternWriterContext context, PropertyInfo declaration)
         {
             var syntax = SyntaxFactory.PropertyDeclaration(SyntaxHelper.GetTypeSyntax(declaration.PropertyType), SyntaxFactory.Identifier(declaration.Name))
                 .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))

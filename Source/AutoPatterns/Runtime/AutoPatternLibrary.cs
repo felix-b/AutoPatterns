@@ -17,7 +17,7 @@ namespace AutoPatterns.Runtime
         private readonly string _assemblyName;
         private readonly object _syncRoot = new object();
         private readonly MetadataReferenceCache _references;
-        private ImmutableArray<AutoPatternCompiler> _compilers;
+        private ImmutableArray<AutoPatternWriter> _writers;
         private ImmutableArray<Assembly> _assemblies;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -26,20 +26,20 @@ namespace AutoPatterns.Runtime
         {
             _assemblyName = assemblyName;
             _references = new MetadataReferenceCache();
-            _compilers = ImmutableArray.Create<AutoPatternCompiler>();
+            _writers = ImmutableArray.Create<AutoPatternWriter>();
             _assemblies = ImmutableArray.Create<Assembly>();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public bool CompilePendingSyntaxes()
+        public bool CompileMembersWrittenSoFar()
         {
             lock (_syncRoot)
             {
                 var uniqueAssemblyName = $"{_assemblyName}_{_assemblies.Length}";
                 Assembly compiledAssembly;
 
-                if (CompileAndLoadAssembly(_compilers.ToArray(), uniqueAssemblyName, out compiledAssembly))
+                if (CompileAndLoadAssembly(_writers.ToArray(), uniqueAssemblyName, out compiledAssembly))
                 {
                     _assemblies = _assemblies.Add(compiledAssembly);
                     return true;
@@ -51,16 +51,16 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public ImmutableArray<AutoPatternCompiler> Compilers => _compilers;
+        public ImmutableArray<AutoPatternWriter> Writers => _writers;
         public ImmutableArray<Assembly> Assemblies => _assemblies;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal void AddCompiler(AutoPatternCompiler compiler)
+        internal void AddWriter(AutoPatternWriter writer)
         {
             lock (_syncRoot)
             {
-                _compilers = _compilers.Add(compiler);
+                _writers = _writers.Add(writer);
             }
         }
 
@@ -80,13 +80,13 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAssembly(AutoPatternCompiler[] compilers, string assemblyName, out byte[] assemblyBytes)
+        private bool CompileAssembly(AutoPatternWriter[] writers, string assemblyName, out byte[] assemblyBytes)
         {
             var allMembers = new List<MemberDeclarationSyntax>();
 
-            foreach (var compiler in compilers)
+            foreach (var writer in writers)
             {
-                IncludeExportsFromCompiler(compiler, allMembers);
+                TakeMembersFromWriter(writer, allMembers);
             }
 
             if (allMembers.Count == 0)
@@ -112,7 +112,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAndLoadAssembly(AutoPatternCompiler[] compilers, string assemblyName, out Assembly compiledAssembly)
+        private bool CompileAndLoadAssembly(AutoPatternWriter[] compilers, string assemblyName, out Assembly compiledAssembly)
         {
             byte[] assemblyBytes;
 
@@ -128,12 +128,9 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void IncludeExportsFromCompiler(
-            AutoPatternCompiler compiler,
-            List<MemberDeclarationSyntax> allMembers)
+        private void TakeMembersFromWriter(AutoPatternWriter writer, List<MemberDeclarationSyntax> allMembers)
         {
-            MemberDeclarationSyntax[] members;
-            compiler.TakeAllSyntax(out members);
+            var members = writer.TakeWrittenMembers();
             allMembers.AddRange(members);
         }
 

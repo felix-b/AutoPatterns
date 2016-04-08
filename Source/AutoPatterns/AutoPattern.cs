@@ -14,7 +14,7 @@ namespace AutoPatterns
     public abstract class AutoPattern
     {
         private readonly string _namespaceName;
-        private readonly AutoPatternCompiler _compiler;
+        private readonly AutoPatternWriter _writer;
         private readonly AutoPatternFactory _factory;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ namespace AutoPatterns
         protected AutoPattern(AutoPatternLibrary library, string namespaceName = null)
         {
             _namespaceName = namespaceName ?? this.GetType().Name.TrimSuffix("Pattern");
-            _compiler = new AutoPatternCompiler(library, namespaceName, PrivateBuildPipeline);
+            _writer = new AutoPatternWriter(library, namespaceName, PrivateBuildPipeline);
             _factory = new AutoPatternFactory(library, namespaceName, GetClassName, OnTypeBound);
         }
 
@@ -51,11 +51,11 @@ namespace AutoPatterns
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected abstract IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context, Pipeline pipeline);
+        protected abstract IAutoPatternTemplate[] BuildPipeline(AutoPatternWriterContext context, Pipeline pipeline);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected AutoPatternCompiler Compiler => _compiler;
+        protected AutoPatternWriter Writer => _writer;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ namespace AutoPatterns
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private IAutoPatternTemplate[] PrivateBuildPipeline(MetaCompilerContext context)
+        private IAutoPatternTemplate[] PrivateBuildPipeline(AutoPatternWriterContext context)
         {
             var pipeline = new Pipeline();
 

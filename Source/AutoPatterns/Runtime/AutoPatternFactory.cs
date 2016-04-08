@@ -158,7 +158,7 @@ namespace AutoPatterns.Runtime
                 return type;
             }
 
-            _library.CompilePendingSyntaxes();
+            _library.CompileMembersWrittenSoFar();
             type = TryGetTypeFromLibrary(key);
 
             if (type != null)
@@ -235,14 +235,14 @@ namespace AutoPatterns.Runtime
                 return (
                     method.IsStatic && 
                     method.IsPublic && 
-                    method.Name.StartsWith(AutoPatternCompiler.FactoryMethodNamePrefix));
+                    method.Name.StartsWith(AutoPatternWriter.FactoryMethodNamePrefix));
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             private static int GetFactoryMethodIndex(MethodInfo method)
             {
-                var suffix = method.Name.Substring(AutoPatternCompiler.FactoryMethodNamePrefix.Length);
+                var suffix = method.Name.Substring(AutoPatternWriter.FactoryMethodNamePrefix.Length);
                 int index;
                 if (Int32.TryParse(suffix, out index))
                 {

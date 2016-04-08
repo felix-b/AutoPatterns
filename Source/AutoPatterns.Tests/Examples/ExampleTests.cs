@@ -20,7 +20,7 @@ namespace AutoPatterns.Tests.Examples
             var compiler = new ExampleAutomaticPropertyCompiler();
             compiler.CompileExampleObject<TestTypes.IScalarProperties>();
 
-            var assemblyBytes = AutoPatternCompiler.CompileAssembly(new AutoPatternCompiler[] { compiler }, "EmittedByExampleTests");
+            var assemblyBytes = AutoPatternWriter.CompileAssembly(new AutoPatternWriter[] { compiler }, "EmittedByExampleTests");
             File.WriteAllBytes($@"C:\Temp\EmittedByExampleTests.dll", assemblyBytes);
             var assembly = Assembly.Load(assemblyBytes); //MetaPatternCompiler.CompileAndLoadAssembly(new MetaPatternCompiler[] { compiler });
             var factory = new ExampleAutomaticPropertyFactory(assembly);
@@ -43,7 +43,7 @@ namespace AutoPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class ExampleAutomaticPropertyCompiler : AutoPatternCompiler
+        public class ExampleAutomaticPropertyCompiler : AutoPatternWriter
         {
             public void CompileExampleObject<T>()
             {
@@ -52,7 +52,7 @@ namespace AutoPatterns.Tests.Examples
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override IAutoPatternTemplate[] BuildPipeline(MetaCompilerContext context)
+            protected override IAutoPatternTemplate[] BuildPipeline(AutoPatternWriterContext context)
             {
                 return new IAutoPatternTemplate[] {
                     new ExampleAutomaticProperty()

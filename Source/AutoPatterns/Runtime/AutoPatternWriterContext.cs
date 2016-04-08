@@ -6,9 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AutoPatterns.Runtime
 {
-    public class MetaCompilerContext
+    public class AutoPatternWriterContext
     {
-        internal MetaCompilerContext(AutoPatternCompiler compiler, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
+        internal AutoPatternWriterContext(AutoPatternWriter writer, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
             this.Input = new InputContext(
                 typeKey, 
@@ -16,7 +16,7 @@ namespace AutoPatterns.Runtime
                 primaryInterfaces.OrEmptyTypes(),
                 secondaryInterfaces.OrEmptyTypes());
 
-            this.Output = new OutputContext(compiler, typeKey);
+            this.Output = new OutputContext(writer, typeKey);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,10 +48,10 @@ namespace AutoPatterns.Runtime
 
         public class OutputContext
         {
-            internal OutputContext(AutoPatternCompiler compiler, TypeKey typeKey)
+            internal OutputContext(AutoPatternWriter writer, TypeKey typeKey)
             {
-                this.ClassNamespace = compiler.NamespaceName;
-                this.ClassName = compiler.GetClassName(typeKey);
+                this.ClassNamespace = writer.NamespaceName;
+                this.ClassName = writer.GetClassName(typeKey);
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
