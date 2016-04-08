@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using AutoPatterns.Extensions;
 
-namespace AutoPatterns
+namespace AutoPatterns.Runtime
 {
     #pragma warning disable 659 // abstract TypeKey overrides Equals, but GetHashCode is overridden by TypeKey's descendands, which produces warning 659.
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using AutoPatterns.Abstractions;
-using AutoPatterns.Impl;
+using AutoPatterns.Runtime;
 using NUnit.Framework;
 using Shouldly;
 

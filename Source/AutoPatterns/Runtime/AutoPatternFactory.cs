@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 
-namespace AutoPatterns.Impl
+namespace AutoPatterns.Runtime
 {
     public sealed class AutoPatternFactory
     {
@@ -25,7 +25,7 @@ namespace AutoPatterns.Impl
         {
             _library = library;
             _namespaceName = namespaceName;
-            _onGetClassName = onGetClassName ?? (key => key.ToString());
+            _onGetClassName = onGetClassName ?? AutoPatternLibrary.GetDefaultClassName;
             _onTypeBound = onTypeBound;
             _typeEntryByKey = ImmutableDictionary.Create<TypeKey, TypeEntry>();
         }
@@ -158,7 +158,7 @@ namespace AutoPatterns.Impl
                 return type;
             }
 
-            _library.CompileAddedSyntaxes();
+            _library.CompilePendingSyntaxes();
             type = TryGetTypeFromLibrary(key);
 
             if (type != null)

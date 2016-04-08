@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using AutoPatterns.Abstractions;
-using AutoPatterns.Impl;
+using AutoPatterns.Extensions;
+using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 

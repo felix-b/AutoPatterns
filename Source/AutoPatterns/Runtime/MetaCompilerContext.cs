@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using AutoPatterns.Abstractions;
 using AutoPatterns.Extensions;
-using AutoPatterns.Impl;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AutoPatterns
+namespace AutoPatterns.Runtime
 {
     public class MetaCompilerContext
     {
@@ -53,7 +51,7 @@ namespace AutoPatterns
             internal OutputContext(AutoPatternCompiler compiler, TypeKey typeKey)
             {
                 this.ClassNamespace = compiler.NamespaceName;
-                this.ClassName = typeKey.ToString();
+                this.ClassName = compiler.GetClassName(typeKey);
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------

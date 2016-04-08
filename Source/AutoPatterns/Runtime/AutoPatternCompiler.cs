@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace AutoPatterns.Impl
+namespace AutoPatterns.Runtime
 {
     public sealed class AutoPatternCompiler
     {
@@ -21,16 +21,24 @@ namespace AutoPatterns.Impl
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        private readonly AutoPatternLibrary _library;
         private readonly string _namespaceName;
         private readonly Func<MetaCompilerContext, IAutoPatternTemplate[]> _onBuildPipeline;
+        private readonly Func<TypeKey, string> _onGetClassName;
         private readonly ConcurrentDictionary<TypeKey, MemberDeclarationSyntax> _syntaxCache;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AutoPatternCompiler(AutoPatternLibrary library, string namespaceName, Func<MetaCompilerContext, IAutoPatternTemplate[]> onBuildPipeline)
+        public AutoPatternCompiler(
+            AutoPatternLibrary library, 
+            string namespaceName,
+            Func<MetaCompilerContext, IAutoPatternTemplate[]> onBuildPipeline,
+            Func<TypeKey, string> onGetClassName = null)
         {
+            _library = library;
             _namespaceName = namespaceName;
             _onBuildPipeline = onBuildPipeline;
+            _onGetClassName = onGetClassName ?? AutoPatternLibrary.GetDefaultClassName;
             _syntaxCache = new ConcurrentDictionary<TypeKey, MemberDeclarationSyntax>();
 
             library.AddCompiler(this);
@@ -54,6 +62,13 @@ namespace AutoPatterns.Impl
             _syntaxCache.GetOrAdd(
                 typeKey, 
                 k => BuildNewClassSyntax(typeKey, baseType, primaryInterfaces, secondaryInterfaces));
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public string GetClassName(TypeKey typeKey)
+        {
+            return _onGetClassName(typeKey);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -94,7 +109,7 @@ namespace AutoPatterns.Impl
 
         private void PreBuildSyntax(MetaCompilerContext context)
         {
-            EnsureMetadataReference(typeof(object));
+            _library.EnsureMetadataReference(typeof(object));
 
             if (context.Input.BaseType != null)
             {
@@ -116,7 +131,7 @@ namespace AutoPatterns.Impl
 
         private void AddBaseType(Type type, MetaCompilerContext context)
         {
-            EnsureMetadataReference(type);
+            _library.EnsureMetadataReference(type);
             context.Output.BaseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
         }
 
@@ -193,130 +208,5 @@ namespace AutoPatterns.Impl
             context.Output.Methods.Add(factoryMethod);
         }
 
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static readonly object _s_referenceCacheSyncRoot = new object();
-        private static ImmutableDictionary<string, MetadataReference> _s_referenceCache = ImmutableDictionary.Create<string, MetadataReference>();
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        internal static bool CompileAssembly(AutoPatternCompiler[] compilers, string assemblyName, out byte[] assemblyBytes)
-        {
-            if (compilers == null)
-            {
-                throw new ArgumentNullException(nameof(compilers));
-            }
-
-            if (compilers.Length == 0)
-            {
-                throw new ArgumentException("At least one compiler is required.", nameof(compilers));
-            }
-
-            var allMembers = new List<MemberDeclarationSyntax>();
-
-            foreach (var compiler in compilers)
-            {
-                IncludeExportsFromCompiler(compiler, allMembers);
-            }
-
-            if (allMembers.Count == 0)
-            {
-                assemblyBytes = null;
-                return false;
-            }
-
-            var syntaxTree = SyntaxTree(CompilationUnit()
-                .WithMembers(List(allMembers))
-                .NormalizeWhitespace());
-
-            //Console.WriteLine(syntaxTree.ToString());
-
-            var compilation = CSharpCompilation
-                .Create(assemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(_s_referenceCache.Values)
-                .AddSyntaxTrees(syntaxTree);
-
-            assemblyBytes = EmitAssemblyBytes(compilation);
-            return true;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        internal static bool CompileAndLoadAssembly(AutoPatternCompiler[] compilers, string assemblyName, out Assembly compiledAssembly)
-        {
-            byte[] assemblyBytes;
-
-            if (CompileAssembly(compilers, assemblyName, out assemblyBytes))
-            {
-                compiledAssembly = Assembly.Load(assemblyBytes);
-                return true;
-            }
-
-            compiledAssembly = null;
-            return false;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        internal static MetadataReference EnsureMetadataReference(Assembly assembly)
-        {
-            var cacheKey = assembly.FullName;
-            MetadataReference reference;
-
-            if (!_s_referenceCache.TryGetValue(cacheKey, out reference))
-            {
-                lock (_s_referenceCacheSyncRoot)
-                {
-                    if (!_s_referenceCache.TryGetValue(cacheKey, out reference))
-                    {
-                        reference = MetadataReference.CreateFromFile(assembly.Location);
-                        _s_referenceCache = _s_referenceCache.Add(cacheKey, reference);
-                    }
-                }
-            }
-
-            return reference;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        internal static MetadataReference EnsureMetadataReference(Type type)
-        {
-            return EnsureMetadataReference(type.GetTypeInfo().Assembly);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static void IncludeExportsFromCompiler(
-            AutoPatternCompiler compiler, 
-            List<MemberDeclarationSyntax> allMembers)
-        {
-            MemberDeclarationSyntax[] members;
-            compiler.TakeAllSyntax(out members);
-            allMembers.AddRange(members);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static byte[] EmitAssemblyBytes(CSharpCompilation compilation)
-        {
-            using (var output = new MemoryStream())
-            {
-                EmitResult result = compilation.Emit(output);
-
-                if (!result.Success)
-                {
-                    IEnumerable<Diagnostic> failures = 
-                        result.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-
-                    throw new Exception(
-                        "Compile failed:" + 
-                        System.Environment.NewLine + 
-                        string.Join(System.Environment.NewLine, failures.Select(f => $"{f.Id}: {f.GetMessage()}")));
-                }
-
-                return output.ToArray();
-            }
-        }
     }
 }

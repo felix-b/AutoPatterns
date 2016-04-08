@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using AutoPatterns.Runtime;
 using NUnit.Framework;
 using Shouldly;
 

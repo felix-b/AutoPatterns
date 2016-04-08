@@ -1,4 +1,6 @@
-﻿namespace AutoPatterns.Abstractions
+﻿using AutoPatterns.Runtime;
+
+namespace AutoPatterns.Abstractions
 {
     public interface IAutoPatternTemplate
     {

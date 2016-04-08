@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AutoPatterns.Impl
+namespace AutoPatterns.Extensions
 {
     internal static class SyntaxHelper
     {

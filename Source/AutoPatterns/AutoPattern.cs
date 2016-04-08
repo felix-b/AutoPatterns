@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoPatterns.Abstractions;
 using AutoPatterns.Extensions;
-using AutoPatterns.Impl;
+using AutoPatterns.Runtime;
 
 namespace AutoPatterns
 {
