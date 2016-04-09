@@ -4,7 +4,7 @@ using AutoPatterns.Runtime;
 using NUnit.Framework;
 using Shouldly;
 
-namespace AutoPatterns.Tests
+namespace AutoPatterns.Tests.Runtime
 {
     [TestFixture]
     public class TypeKeyTests

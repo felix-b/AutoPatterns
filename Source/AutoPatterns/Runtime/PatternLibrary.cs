@@ -12,22 +12,22 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Runtime
 {
-    public class AutoPatternLibrary
+    public class PatternLibrary
     {
         private readonly string _assemblyName;
         private readonly object _syncRoot = new object();
-        private readonly MetadataReferenceCache _references;
-        private ImmutableArray<AutoPatternWriter> _writers;
+        private readonly ReferenceCache _references;
+        private ImmutableArray<PatternWriter> _writers;
         private ImmutableArray<Assembly> _assemblies;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AutoPatternLibrary(string assemblyName)
+        public PatternLibrary(string assemblyName, params Assembly[] preloadedAssemblies)
         {
             _assemblyName = assemblyName;
-            _references = new MetadataReferenceCache();
-            _writers = ImmutableArray.Create<AutoPatternWriter>();
-            _assemblies = ImmutableArray.Create<Assembly>();
+            _references = new ReferenceCache();
+            _writers = ImmutableArray.Create<PatternWriter>();
+            _assemblies = ImmutableArray.Create<Assembly>(preloadedAssemblies);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ namespace AutoPatterns.Runtime
                 var uniqueAssemblyName = $"{_assemblyName}_{_assemblies.Length}";
                 Assembly compiledAssembly;
 
-                if (CompileAndLoadAssembly(_writers.ToArray(), uniqueAssemblyName, out compiledAssembly))
+                if (CompileAndLoadAssembly(uniqueAssemblyName, out compiledAssembly))
                 {
                     _assemblies = _assemblies.Add(compiledAssembly);
                     return true;
@@ -51,12 +51,12 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public ImmutableArray<AutoPatternWriter> Writers => _writers;
+        public ImmutableArray<PatternWriter> Writers => _writers;
         public ImmutableArray<Assembly> Assemblies => _assemblies;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal void AddWriter(AutoPatternWriter writer)
+        internal void AddWriter(PatternWriter writer)
         {
             lock (_syncRoot)
             {
@@ -80,11 +80,12 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAssembly(AutoPatternWriter[] writers, string assemblyName, out byte[] assemblyBytes)
+        private bool CompileAssembly(string assemblyName, out byte[] assemblyBytes)
         {
             var allMembers = new List<MemberDeclarationSyntax>();
+            var currentWriters = _writers;
 
-            foreach (var writer in writers)
+            foreach (var writer in currentWriters)
             {
                 TakeMembersFromWriter(writer, allMembers);
             }
@@ -112,11 +113,11 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAndLoadAssembly(AutoPatternWriter[] compilers, string assemblyName, out Assembly compiledAssembly)
+        private bool CompileAndLoadAssembly(string assemblyName, out Assembly compiledAssembly)
         {
             byte[] assemblyBytes;
 
-            if (CompileAssembly(compilers, assemblyName, out assemblyBytes))
+            if (CompileAssembly(assemblyName, out assemblyBytes))
             {
                 compiledAssembly = Assembly.Load(assemblyBytes);
                 return true;
@@ -128,7 +129,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void TakeMembersFromWriter(AutoPatternWriter writer, List<MemberDeclarationSyntax> allMembers)
+        private void TakeMembersFromWriter(PatternWriter writer, List<MemberDeclarationSyntax> allMembers)
         {
             var members = writer.TakeWrittenMembers();
             allMembers.AddRange(members);
@@ -138,7 +139,7 @@ namespace AutoPatterns.Runtime
 
         private byte[] EmitAssemblyBytes(CSharpCompilation compilation)
         {
-            using (var output = new MemoryStream())
+            using (var output = new MemoryStream())// (capacity: 16384))
             {
                 EmitResult result = compilation.Emit(output);
 
@@ -155,13 +156,6 @@ namespace AutoPatterns.Runtime
 
                 return output.ToArray();
             }
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public static string GetDefaultClassName(TypeKey key)
-        {
-            return key.ToString();
         }
     }
 }

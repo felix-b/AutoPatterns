@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using AutoPatterns.Abstractions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -12,21 +11,21 @@ using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Shouldly;
 
-namespace AutoPatterns.Tests.Abstractions
+namespace AutoPatterns.Tests.Runtime
 {
     [TestFixture]
-    public class AutoPatternFactoryTests
+    public class PatternFactoryTests
     {
         [Test]
         public void CreateObject_ParameterlessConstructor()
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassA();
+            var obj = pattern.CreateTestClassA();
 
             //-- assert
 
@@ -43,11 +42,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassA(123);
+            var obj = pattern.CreateTestClassA(123);
 
             //-- assert
 
@@ -64,11 +63,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassA(123, "ABC");
+            var obj = pattern.CreateTestClassA(123, "ABC");
 
             //-- assert
 
@@ -85,11 +84,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassA(123, "ABC", 123.45m);
+            var obj = pattern.CreateTestClassA(123, "ABC", 123.45m);
 
             //-- assert
 
@@ -106,11 +105,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassA(123, "ABC", 123.45m, DayOfWeek.Tuesday);
+            var obj = pattern.CreateTestClassA(123, "ABC", 123.45m, DayOfWeek.Tuesday);
 
             //-- assert
 
@@ -127,11 +126,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123));
+            var obj = pattern.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123));
 
             //-- assert
 
@@ -152,11 +151,11 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var obj = factory.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10));
+            var obj = pattern.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10));
 
             //-- assert
 
@@ -177,12 +176,12 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
             var stopwatch = Stopwatch.StartNew();
 
             //-- act
 
-            var obj = factory.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10), stopwatch);
+            var obj = pattern.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10), stopwatch);
 
             //-- assert
 
@@ -203,13 +202,13 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
             var stopwatch = Stopwatch.StartNew();
             var byteArray = new byte[] { 1, 2, 3 };
 
             //-- act
 
-            var obj = factory.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10), stopwatch, byteArray);
+            var obj = pattern.CreateTestClassB(123, "ABC", 123.45m, DayOfWeek.Tuesday, TimeSpan.FromSeconds(123), new DateTime(2010, 10, 10), stopwatch, byteArray);
 
             //-- assert
 
@@ -230,26 +229,26 @@ namespace AutoPatterns.Tests.Abstractions
         {
             //-- arrange
 
-            var factory = new TestFactoryOne();
+            var pattern = new TestPatternOne(CreateTestLibrary());
 
             //-- act
 
-            var log0 = factory.TypeEntryLog.ToArray();
+            var log0 = pattern.TypeEntryLog.ToArray();
 
-            factory.CreateTestClassA();
+            pattern.CreateTestClassA();
 
-            var log1 = factory.TypeEntryLog.ToArray();
+            var log1 = pattern.TypeEntryLog.ToArray();
 
-            factory.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
+            pattern.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
 
-            var log2 = factory.TypeEntryLog.ToArray();
+            var log2 = pattern.TypeEntryLog.ToArray();
 
-            factory.CreateTestClassA();
-            factory.CreateTestClassA();
-            factory.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
-            factory.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
+            pattern.CreateTestClassA();
+            pattern.CreateTestClassA();
+            pattern.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
+            pattern.CreateTestClassB(123, "ABC", 0.5m, DayOfWeek.Friday, TimeSpan.Zero);
 
-            var log3 = factory.TypeEntryLog.ToArray();
+            var log3 = pattern.TypeEntryLog.ToArray();
 
             //-- assert
 
@@ -283,7 +282,7 @@ namespace AutoPatterns.Tests.Abstractions
 
             Assembly generatedAssembly;
 
-            using (var output = new MemoryStream())
+            using (var output = new MemoryStream(capacity: 16384))
             {
                 EmitResult result = compilation.Emit(output);
 
@@ -302,7 +301,8 @@ namespace AutoPatterns.Tests.Abstractions
                 generatedAssembly = Assembly.Load(output.ToArray());
             }
 
-            var factory = new TestFactoryTwo(generatedAssembly);
+            var library = new PatternLibrary(assemblyName: "NotUsed", preloadedAssemblies: generatedAssembly);
+            var factory = new TestPatternTwo(library);
 
             //-- act
 
@@ -321,14 +321,21 @@ namespace AutoPatterns.Tests.Abstractions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class TestFactoryOne : AutoPatternFactory
+        private PatternLibrary CreateTestLibrary()
+        {
+            return new PatternLibrary(this.GetType().Name, Assembly.GetExecutingAssembly());
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class TestPatternOne : AutoPattern
         {
             private readonly List<Type> _typeEntryLog = new List<Type>();
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public TestFactoryOne()
-                : base(new[] { Assembly.GetExecutingAssembly() })
+            public TestPatternOne(PatternLibrary library)
+                : base(library, namespaceName: "")
             {
             }
 
@@ -336,23 +343,23 @@ namespace AutoPatterns.Tests.Abstractions
 
             public TestClassA CreateTestClassA()
             {
-                return (TestClassA)base.CreateInstance(new TypeKey<Type>(typeof(TestClassA)), 0);
+                return (TestClassA)Factory.CreateInstance(new TypeKey<Type>(typeof(TestClassA)), 0);
             }
             public TestClassA CreateTestClassA(int intValue)
             {
-                return (TestClassA)base.CreateInstance<int>(new TypeKey<Type>(typeof(TestClassA)), 1, intValue);
+                return (TestClassA)Factory.CreateInstance<int>(new TypeKey<Type>(typeof(TestClassA)), 1, intValue);
             }
             public TestClassA CreateTestClassA(int intValue, string stringValue)
             {
-                return (TestClassA)base.CreateInstance<int, string>(new TypeKey<Type>(typeof(TestClassA)), 2, intValue, stringValue);
+                return (TestClassA)Factory.CreateInstance<int, string>(new TypeKey<Type>(typeof(TestClassA)), 2, intValue, stringValue);
             }
             public TestClassA CreateTestClassA(int intValue, string stringValue, decimal decimalValue)
             {
-                return (TestClassA)base.CreateInstance<int, string, decimal>(new TypeKey<Type>(typeof(TestClassA)), 3, intValue, stringValue, decimalValue);
+                return (TestClassA)Factory.CreateInstance<int, string, decimal>(new TypeKey<Type>(typeof(TestClassA)), 3, intValue, stringValue, decimalValue);
             }
             public TestClassA CreateTestClassA(int intValue, string stringValue, decimal decimalValue, DayOfWeek enumValue)
             {
-                return (TestClassA)base.CreateInstance<int, string, decimal, DayOfWeek>(
+                return (TestClassA)Factory.CreateInstance<int, string, decimal, DayOfWeek>(
                     new TypeKey<Type>(typeof(TestClassA)), 4, intValue, stringValue, decimalValue, enumValue);
             }
 
@@ -360,28 +367,28 @@ namespace AutoPatterns.Tests.Abstractions
 
             public TestClassB CreateTestClassB(int intValue, string stringValue, decimal decimalValue, DayOfWeek enumValue, TimeSpan timeSpanValue)
             {
-                return (TestClassB)base.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan>(
+                return (TestClassB)Factory.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan>(
                     new TypeKey<Type>(typeof(TestClassB)), 
                     0, 
                     intValue, stringValue, decimalValue, enumValue, timeSpanValue);
             }
             public TestClassB CreateTestClassB(int intValue, string stringValue, decimal decimalValue, DayOfWeek enumValue, TimeSpan timeSpanValue, DateTime dateTimeValue)
             {
-                return (TestClassB)base.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime>(
+                return (TestClassB)Factory.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime>(
                     new TypeKey<Type>(typeof(TestClassB)),
                     1,
                     intValue, stringValue, decimalValue, enumValue, timeSpanValue, dateTimeValue);
             }
             public TestClassB CreateTestClassB(int intValue, string stringValue, decimal decimalValue, DayOfWeek enumValue, TimeSpan timeSpanValue, DateTime dateTimeValue, Stopwatch stopwatchValue)
             {
-                return (TestClassB)base.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime, Stopwatch>(
+                return (TestClassB)Factory.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime, Stopwatch>(
                     new TypeKey<Type>(typeof(TestClassB)),
                     2,
                     intValue, stringValue, decimalValue, enumValue, timeSpanValue, dateTimeValue, stopwatchValue);
             }
             public TestClassB CreateTestClassB(int intValue, string stringValue, decimal decimalValue, DayOfWeek enumValue, TimeSpan timeSpanValue, DateTime dateTimeValue, Stopwatch stopwatchValue, byte[] byteArrayValue)
             {
-                return (TestClassB)base.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime, Stopwatch, byte[]>(
+                return (TestClassB)Factory.CreateInstance<int, string, decimal, DayOfWeek, TimeSpan, DateTime, Stopwatch, byte[]>(
                     new TypeKey<Type>(typeof(TestClassB)),
                     3,
                     intValue, stringValue, decimalValue, enumValue, timeSpanValue, dateTimeValue, stopwatchValue, byteArrayValue);
@@ -393,29 +400,31 @@ namespace AutoPatterns.Tests.Abstractions
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override void OnTypeEntryCreated(TypeEntry entry)
-            {
-                _typeEntryLog.Add(entry.Type);
-            }
-
-            //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-            protected override string GetClassName(TypeKey key)
+            public override string GetClassName(TypeKey key)
             {
                 return key[0].ToString();
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override string _namespaceName => "";
+            protected override void BuildPipeline(PatternWriterContext context, PipelineBuilder pipeline)
+            {
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            protected internal override void OnTypeBound(PatternFactory.TypeEntry entry)
+            {
+                _typeEntryLog.Add(entry.Type);
+            }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class TestFactoryTwo : AutoPatternFactory
+        public class TestPatternTwo : AutoPattern
         {
-            public TestFactoryTwo(Assembly generatedAssembly)
-                : base(new[] { generatedAssembly })
+            public TestPatternTwo(PatternLibrary library)
+                : base(library, namespaceName: "MyNamespace")
             {
             }
 
@@ -423,12 +432,14 @@ namespace AutoPatterns.Tests.Abstractions
 
             public object CreateMyClass(int value)
             {
-                return base.CreateInstance<int>(new TypeKey<string>("MyClass"), constructorIndex: 0, arg1: value);
+                return Factory.CreateInstance<int>(new TypeKey<string>("MyClass"), constructorIndex: 0, arg1: value);
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override string _namespaceName => "MyNamespace";
+            protected override void BuildPipeline(PatternWriterContext context, PipelineBuilder pipeline)
+            {
+            }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

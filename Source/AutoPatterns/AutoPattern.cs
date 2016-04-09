@@ -13,17 +13,21 @@ namespace AutoPatterns
 {
     public abstract class AutoPattern
     {
+        private readonly PatternLibrary _library;
         private readonly string _namespaceName;
-        private readonly AutoPatternWriter _writer;
-        private readonly AutoPatternFactory _factory;
+        private readonly PatternWriter _writer;
+        private readonly PatternFactory _factory;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected AutoPattern(AutoPatternLibrary library, string namespaceName = null)
+        protected AutoPattern(PatternLibrary library, string namespaceName = null)
         {
+            _library = library;
             _namespaceName = namespaceName ?? this.GetType().Name.TrimSuffix("Pattern");
-            _writer = new AutoPatternWriter(library, namespaceName, PrivateBuildPipeline);
-            _factory = new AutoPatternFactory(library, namespaceName, GetClassName, OnTypeBound);
+            _writer = new PatternWriter(this);
+            _factory = new PatternFactory(this);
+
+            library.AddWriter(_writer);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -39,33 +43,37 @@ namespace AutoPatterns
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public PatternLibrary Library => _library;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         public event EventHandler<TypeEventArgs> TypeBound;
         public event EventHandler<PipelineEventArgs> BuildingPipeline;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected virtual void OnTypeBound(TypeKey key, Type type)
+        protected abstract void BuildPipeline(PatternWriterContext context, PipelineBuilder pipeline);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected PatternWriter Writer => _writer;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected PatternFactory Factory => _factory;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        internal protected virtual void OnTypeBound(PatternFactory.TypeEntry typeEntry)
         {
-            TypeBound?.Invoke(this, new TypeEventArgs(key, type));
+            TypeBound?.Invoke(this, new TypeEventArgs(typeEntry.Key, typeEntry.Type));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected abstract IAutoPatternTemplate[] BuildPipeline(AutoPatternWriterContext context, Pipeline pipeline);
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        protected AutoPatternWriter Writer => _writer;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        protected AutoPatternFactory Factory => _factory;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private IAutoPatternTemplate[] PrivateBuildPipeline(AutoPatternWriterContext context)
+        internal IPatternTemplate[] InternalBuildPipeline(PatternWriterContext context)
         {
-            var pipeline = new Pipeline();
+            var pipeline = new PipelineBuilder();
 
             BuildPipeline(context, pipeline);
             BuildingPipeline?.Invoke(this, new PipelineEventArgs(pipeline));
@@ -75,61 +83,75 @@ namespace AutoPatterns
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class Pipeline
+        public class PipelineBuilder
         {
-            private readonly List<IAutoPatternTemplate> _sinks = new List<IAutoPatternTemplate>();
+            private readonly LinkedList<IPatternTemplate> _sinks = new LinkedList<IPatternTemplate>();
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
-            public void InsertFirst(params IAutoPatternTemplate[] templates)
+            internal PipelineBuilder()
             {
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
-            public void InsertLast(params IAutoPatternTemplate[] templates)
+            public void InsertFirst(params IPatternTemplate[] templates)
+            {
+                for (int i = templates.Length - 1; i >= 0; i--)
+                {
+                    _sinks.AddFirst(templates[i]);
+                }
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertLast(params IPatternTemplate[] templates)
+            {
+                for (int i = 0 ; i < templates.Length ; i++)
+                {
+                    _sinks.AddLast(templates[i]);
+                }
+            }
+
+            //------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+            public void InsertBefore<TTemplate>(params IPatternTemplate[] templates)
+                where TTemplate : IPatternTemplate
             {
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
-            public void InsertBefore<TTemplate>(params IAutoPatternTemplate[] templates)
-                where TTemplate : IAutoPatternTemplate
-            {
-            }
-
-            //------------------------------------------------------------------------------------------------------------------------------------------------- 
-
-            public void InsertAfter<TTemplate>(params IAutoPatternTemplate[] templates)
-                where TTemplate : IAutoPatternTemplate
+            public void InsertAfter<TTemplate>(params IPatternTemplate[] templates)
+                where TTemplate : IPatternTemplate
             {
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
             public void Remove<TTemplate>() 
-                where TTemplate : IAutoPatternTemplate
+                where TTemplate : IPatternTemplate
             {
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
-            public void Replace<TTemplate>(params IAutoPatternTemplate[] replacingTemplates)
-                where TTemplate : IAutoPatternTemplate
+            public void Replace<TTemplate>(params IPatternTemplate[] replacingTemplates)
+                where TTemplate : IPatternTemplate
             {
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
             public bool HasTemplate<TTemplate>()
-                where TTemplate : IAutoPatternTemplate
+                where TTemplate : IPatternTemplate
             {
                 return false;
             }
 
             //------------------------------------------------------------------------------------------------------------------------------------------------- 
 
-            public IAutoPatternTemplate[] ToArray()
+            public IPatternTemplate[] ToArray()
             {
                 return _sinks.ToArray();
             }
@@ -139,14 +161,14 @@ namespace AutoPatterns
 
         public class PipelineEventArgs : EventArgs
         {
-            public PipelineEventArgs(Pipeline pipeline)
+            public PipelineEventArgs(PipelineBuilder pipeline)
             {
                 Pipeline = pipeline;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            public Pipeline Pipeline { get; private set; }
+            public PipelineBuilder Pipeline { get; private set; }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

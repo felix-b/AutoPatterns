@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using AutoPatterns.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AutoPatterns.Runtime
 {
-    public class AutoPatternWriterContext
+    public class PatternWriterContext
     {
-        internal AutoPatternWriterContext(AutoPatternWriter writer, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
+        internal PatternWriterContext(PatternWriter writer, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
             this.Input = new InputContext(
                 typeKey, 
@@ -48,10 +49,10 @@ namespace AutoPatterns.Runtime
 
         public class OutputContext
         {
-            internal OutputContext(AutoPatternWriter writer, TypeKey typeKey)
+            internal OutputContext(PatternWriter writer, TypeKey typeKey)
             {
-                this.ClassNamespace = writer.NamespaceName;
-                this.ClassName = writer.GetClassName(typeKey);
+                this.ClassNamespace = writer.OwnerPattern.NamespaceName;
+                this.ClassName = writer.OwnerPattern.GetClassName(typeKey);
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,6 +66,7 @@ namespace AutoPatterns.Runtime
             public List<PropertyDeclarationSyntax> Properties { get; } = new List<PropertyDeclarationSyntax>();
             public List<IndexerDeclarationSyntax> Indexers { get; } = new List<IndexerDeclarationSyntax>();
             public List<EventDeclarationSyntax> Events { get; } = new List<EventDeclarationSyntax>();
+            public Dictionary<MemberInfo, MemberDeclarationSyntax> SyntaxByDeclaration { get; } = new Dictionary<MemberInfo, MemberDeclarationSyntax>();
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -15,33 +15,21 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Runtime
 {
-    public sealed class AutoPatternWriter
+    public sealed class PatternWriter
     {
         public const string FactoryMethodNamePrefix = "FactoryMethod__";
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private readonly AutoPatternLibrary _library;
-        private readonly string _namespaceName;
-        private readonly Func<AutoPatternWriterContext, IAutoPatternTemplate[]> _onBuildPipeline;
-        private readonly Func<TypeKey, string> _onGetClassName;
+        private readonly AutoPattern _ownerPattern;
         private readonly ConcurrentDictionary<TypeKey, MemberDeclarationSyntax> _writtenMembers;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AutoPatternWriter(
-            AutoPatternLibrary library, 
-            string namespaceName,
-            Func<AutoPatternWriterContext, IAutoPatternTemplate[]> onBuildPipeline,
-            Func<TypeKey, string> onGetClassName = null)
+        public PatternWriter(AutoPattern ownerPattern)
         {
-            _library = library;
-            _namespaceName = namespaceName;
-            _onBuildPipeline = onBuildPipeline;
-            _onGetClassName = onGetClassName ?? AutoPatternLibrary.GetDefaultClassName;
+            _ownerPattern = ownerPattern;
             _writtenMembers = new ConcurrentDictionary<TypeKey, MemberDeclarationSyntax>();
-
-            library.AddWriter(this);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,10 +54,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public string GetClassName(TypeKey typeKey)
-        {
-            return _onGetClassName(typeKey);
-        }
+        public AutoPattern OwnerPattern => _ownerPattern;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -82,18 +67,14 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public string NamespaceName => _namespaceName;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         private MemberDeclarationSyntax WriteClass(
             TypeKey typeKey, 
             Type baseType, 
             Type[] primaryInterfaces, 
             Type[] secondaryInterfaces)
         {
-            var context = new AutoPatternWriterContext(this, typeKey, baseType, primaryInterfaces, secondaryInterfaces);
-            var pipeline = _onBuildPipeline(context);
+            var context = new PatternWriterContext(this, typeKey, baseType, primaryInterfaces, secondaryInterfaces);
+            var pipeline = _ownerPattern.InternalBuildPipeline(context);
 
             WriteBaseTypes(context);
 
@@ -108,9 +89,9 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void WriteBaseTypes(AutoPatternWriterContext context)
+        private void WriteBaseTypes(PatternWriterContext context)
         {
-            _library.EnsureMetadataReference(typeof(object));
+            _ownerPattern.Library.EnsureMetadataReference(typeof(object));
 
             if (context.Input.BaseType != null)
             {
@@ -130,15 +111,15 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void AddBaseType(Type type, AutoPatternWriterContext context)
+        private void AddBaseType(Type type, PatternWriterContext context)
         {
-            _library.EnsureMetadataReference(type);
+            _ownerPattern.Library.EnsureMetadataReference(type);
             context.Output.BaseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private MemberDeclarationSyntax GetCompleteClassSyntax(AutoPatternWriterContext context)
+        private MemberDeclarationSyntax GetCompleteClassSyntax(PatternWriterContext context)
         {
             WriteFactoryMethods(context);
 
@@ -163,7 +144,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void WriteFactoryMethods(AutoPatternWriterContext context)
+        private void WriteFactoryMethods(PatternWriterContext context)
         {
             var constructorList = context.Output.Constructors;
 
@@ -182,7 +163,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void WriteFactoryMethod(AutoPatternWriterContext context, ConstructorDeclarationSyntax constructor, int index)
+        private void WriteFactoryMethod(PatternWriterContext context, ConstructorDeclarationSyntax constructor, int index)
         {
             var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier($"FactoryMethod__{index}"))
                 .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
@@ -198,7 +179,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void WriteDefaultFactoryMethod(AutoPatternWriterContext context)
+        private void WriteDefaultFactoryMethod(PatternWriterContext context)
         {
             var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier("FactoryMethod__0"))
                 .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))

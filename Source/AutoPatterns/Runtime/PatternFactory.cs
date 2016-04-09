@@ -6,27 +6,17 @@ using System.Reflection;
 
 namespace AutoPatterns.Runtime
 {
-    public sealed class AutoPatternFactory
+    public sealed class PatternFactory
     {
         private readonly object _syncRoot = new object();
-        private readonly AutoPatternLibrary _library;
-        private readonly string _namespaceName; //=> this.GetType().Name.TrimSuffix("Factory");
-        private readonly Func<TypeKey, string> _onGetClassName;
-        private readonly Action<TypeKey, Type> _onTypeBound;
+        private readonly AutoPattern _ownerPattern;
         private ImmutableDictionary<TypeKey, TypeEntry> _typeEntryByKey;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AutoPatternFactory(
-            AutoPatternLibrary library, 
-            string namespaceName, 
-            Func<TypeKey, string> onGetClassName = null, 
-            Action<TypeKey, Type> onTypeBound = null)
+        public PatternFactory(AutoPattern ownerPattern)
         {
-            _library = library;
-            _namespaceName = namespaceName;
-            _onGetClassName = onGetClassName ?? AutoPatternLibrary.GetDefaultClassName;
-            _onTypeBound = onTypeBound;
+            _ownerPattern = ownerPattern;
             _typeEntryByKey = ImmutableDictionary.Create<TypeKey, TypeEntry>();
         }
 
@@ -113,17 +103,6 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public string GetClassName(TypeKey key)
-        {
-            return _onGetClassName(key);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public string NamespaceName => _namespaceName;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         private TypeEntry GetOrAddTypeEntry(TypeKey key)
         {
             TypeEntry entry;
@@ -138,8 +117,7 @@ namespace AutoPatterns.Runtime
                         var type = GetTypeFromLibraryOrThrow(key);
                         entry = new TypeEntry(key, type.GetTypeInfo());
                         _typeEntryByKey = _typeEntryByKey.Add(key, entry);
-
-                        _onTypeBound?.Invoke(entry.Key, entry.Type);
+                        _ownerPattern.OnTypeBound(entry);
                     }
                 }
             }
@@ -158,30 +136,31 @@ namespace AutoPatterns.Runtime
                 return type;
             }
 
-            _library.CompileMembersWrittenSoFar();
-            type = TryGetTypeFromLibrary(key);
+            if (_ownerPattern.Library.CompileMembersWrittenSoFar())
+            {
+                type = TryGetTypeFromLibrary(key);
+            }
 
             if (type != null)
             {
                 return type;
             }
 
-            throw new AggregateException($"Type '{_namespaceName}.{GetClassName(key)}' cannot be found in any of library assemblies.");
+            throw new ArgumentException(
+                $"Type '{_ownerPattern.NamespaceName}.{_ownerPattern.GetClassName(key)}' cannot be found in any of library assemblies.", 
+                nameof(key));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         private Type TryGetTypeFromLibrary(TypeKey key)
         {
-            var assemblies = _library.Assemblies;
+            var assemblies = _ownerPattern.Library.Assemblies;
 
             for (int i = 0; i < assemblies.Length; i++)
             {
                 var assembly = assemblies[i];
-                var typeString = (
-                    string.IsNullOrEmpty(_namespaceName) ?
-                    $"{GetClassName(key)}" :
-                    $"{_namespaceName}.{GetClassName(key)}");
+                var typeString = $"{_ownerPattern.NamespaceName}.{_ownerPattern.GetClassName(key)}";
                 var type = assembly.GetType(typeString);
 
                 if (type != null)
@@ -235,14 +214,14 @@ namespace AutoPatterns.Runtime
                 return (
                     method.IsStatic && 
                     method.IsPublic && 
-                    method.Name.StartsWith(AutoPatternWriter.FactoryMethodNamePrefix));
+                    method.Name.StartsWith(PatternWriter.FactoryMethodNamePrefix));
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             private static int GetFactoryMethodIndex(MethodInfo method)
             {
-                var suffix = method.Name.Substring(AutoPatternWriter.FactoryMethodNamePrefix.Length);
+                var suffix = method.Name.Substring(PatternWriter.FactoryMethodNamePrefix.Length);
                 int index;
                 if (Int32.TryParse(suffix, out index))
                 {

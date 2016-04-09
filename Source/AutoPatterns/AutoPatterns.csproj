@@ -100,23 +100,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstractions\IAutoPatternTemplate.cs" />
-    <Compile Include="Runtime\AutoPatternWriter.cs" />
-    <Compile Include="Runtime\AutoPatternFactory.cs" />
-    <Compile Include="Abstractions\TemplateMemberMatcher.cs" />
+    <Compile Include="Preprocessing\IPatternTemplate.cs" />
+    <Compile Include="Runtime\PatternWriter.cs" />
+    <Compile Include="Runtime\PatternFactory.cs" />
+    <Compile Include="Preprocessing\TemplateMemberMatcher.cs" />
     <Compile Include="AutoPattern.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Extensions\SyntaxHelper.cs" />
-    <Compile Include="Runtime\AutoPatternWriterContext.cs" />
+    <Compile Include="Runtime\PatternWriterContext.cs" />
     <Compile Include="MetaProgram.Annotation.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.cs" />
     <Compile Include="MetaProgram.MetaType.cs" />
     <Compile Include="MetaProgram.TypeParam.cs" />
-    <Compile Include="Runtime\AutoPatternLibrary.cs" />
+    <Compile Include="Runtime\PatternLibrary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\MetadataReferenceCache.cs" />
+    <Compile Include="Runtime\ReferenceCache.cs" />
     <Compile Include="Runtime\TypeKey.cs" />
   </ItemGroup>
   <ItemGroup>

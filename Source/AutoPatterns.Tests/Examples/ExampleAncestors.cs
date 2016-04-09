@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace AutoPatterns.Tests
+namespace AutoPatterns.Tests.Examples
 {
-    public static class TestTypes
+    public static class ExampleAncestors
     {
         public interface IScalarProperties
         {

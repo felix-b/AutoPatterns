@@ -16,17 +16,17 @@ namespace AutoPatterns.Tests.Examples
 
     //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    public partial class ExampleAutomaticProperty : IAutoPatternTemplate
+    public partial class ExampleAutomaticProperty : IPatternTemplate
     {
-        void IAutoPatternTemplate.Apply(AutoPatternWriterContext context)
+        void IPatternTemplate.Apply(PatternWriterContext context)
         {
             foreach (var interfaceType in context.Input.PrimaryInterfaces)
             {
                 foreach (var property in interfaceType.GetTypeInfo().DeclaredProperties)
                 {
-                    if (Match__AProperty(context, property))
+                    if (AProperty__Match(context, property))
                     {
-                        Apply__AProperty(context, property);
+                        AProperty__Apply(context, property);
                     }
                 }
             }
@@ -34,33 +34,14 @@ namespace AutoPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool Template__ShouldApply(AutoPatternWriterContext context)
-        {
-            return true;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void Template__BeginApply(AutoPatternWriterContext context)
-        {
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void Template__EndApply(AutoPatternWriterContext context)
-        {
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private bool Match__AProperty(AutoPatternWriterContext context, PropertyInfo declaration)
+        private bool AProperty__Match(PatternWriterContext context, PropertyInfo declaration)
         {
             return (declaration.CanRead && declaration.CanWrite && declaration.GetIndexParameters().Length == 0);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private void Apply__AProperty(AutoPatternWriterContext context, PropertyInfo declaration)
+        private void AProperty__Apply(PatternWriterContext context, PropertyInfo declaration)
         {
             var syntax = SyntaxFactory.PropertyDeclaration(SyntaxHelper.GetTypeSyntax(declaration.PropertyType), SyntaxFactory.Identifier(declaration.Name))
                 .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))

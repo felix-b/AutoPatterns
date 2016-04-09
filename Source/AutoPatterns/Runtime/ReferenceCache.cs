@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis;
 
 namespace AutoPatterns.Runtime
 {
-    internal class MetadataReferenceCache
+    internal class ReferenceCache
     {
         private readonly object _syncRoot = new object();
         private ImmutableDictionary<string, MetadataReference> _referenceByAssemblyName = ImmutableDictionary.Create<string, MetadataReference>();

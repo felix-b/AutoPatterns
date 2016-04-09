@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Reflection;
-using AutoPatterns.Abstractions;
 using AutoPatterns.Runtime;
 using NUnit.Framework;
 using Shouldly;
@@ -17,17 +15,14 @@ namespace AutoPatterns.Tests.Examples
         {
             //-- arrange
 
-            var compiler = new ExampleAutomaticPropertyCompiler();
-            compiler.CompileExampleObject<TestTypes.IScalarProperties>();
-
-            var assemblyBytes = AutoPatternWriter.CompileAssembly(new AutoPatternWriter[] { compiler }, "EmittedByExampleTests");
-            File.WriteAllBytes($@"C:\Temp\EmittedByExampleTests.dll", assemblyBytes);
-            var assembly = Assembly.Load(assemblyBytes); //MetaPatternCompiler.CompileAndLoadAssembly(new MetaPatternCompiler[] { compiler });
-            var factory = new ExampleAutomaticPropertyFactory(assembly);
+            var library = new PatternLibrary(assemblyName: this.GetType().Name);
+            var pattern = new ExampleAutomaticPropertyPattern(library);
 
             //-- act
 
-            var obj = factory.CreateExampleObject<TestTypes.IScalarProperties>();
+            pattern.WriteExampleObject<ExampleAncestors.IScalarProperties>();
+
+            var obj = pattern.CreateExampleObject<ExampleAncestors.IScalarProperties>();
             obj.IntValue = 123;
             obj.StringValue = "ABC";
             obj.EnumValue = DayOfWeek.Thursday;
@@ -43,70 +38,53 @@ namespace AutoPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class ExampleAutomaticPropertyCompiler : AutoPatternWriter
+        [Test]
+        public void BenchmarkGenerateObjectByAutomaticPropertyTemplate()
         {
-            public void CompileExampleObject<T>()
+            for (int i = 0 ; i < 50 ; i++)
             {
-                BuildSyntax(new TypeKey<Type>(typeof(T)), primaryInterface: typeof(T));
-            }
-
-            //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-            protected override IAutoPatternTemplate[] BuildPipeline(AutoPatternWriterContext context)
-            {
-                return new IAutoPatternTemplate[] {
-                    new ExampleAutomaticProperty()
-                };
+                var clock = Stopwatch.StartNew();
+                CanGenerateObjectByAutomaticPropertyTemplate();
+                Console.WriteLine(clock.ElapsedMilliseconds);
             }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class ExampleAutomaticPropertyFactory : AutoPatternFactory
+        private PatternLibrary CreateTestLibrary()
         {
-            public ExampleAutomaticPropertyFactory(params Assembly[] assemblies)
-                : base(assemblies)
+            return new PatternLibrary(this.GetType().Name, Assembly.GetExecutingAssembly());
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public class ExampleAutomaticPropertyPattern : AutoPattern
+        {
+            public ExampleAutomaticPropertyPattern(PatternLibrary library)
+                : base(library)
             {
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public void WriteExampleObject<T>()
+            {
+                Writer.EnsureWritten(new TypeKey<Type>(typeof(T)), primaryInterface: typeof(T));
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             public T CreateExampleObject<T>()
             {
-                return (T)base.CreateInstance(new TypeKey<Type>(typeof(T)), constructorIndex: 0);
+                return (T)Factory.CreateInstance(new TypeKey<Type>(typeof(T)), constructorIndex: 0);
             }
-        }
-    }
 
-    public class MetaPatterns_Tests_TestTypes_IScalarProperties : TestTypes.IScalarProperties
-    {
-        public static object FactoryMethod__0()
-        {
-            return new MetaPatterns_Tests_TestTypes_IScalarProperties();
-        }
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public System.Int32 IntValue
-        {
-            get;
-            set;
-        }
-
-        public System.String StringValue
-        {
-            get;
-            set;
-        }
-
-        public System.DayOfWeek EnumValue
-        {
-            get;
-            set;
-        }
-
-        public System.TimeSpan TimeSpanValue
-        {
-            get;
-            set;
+            protected override void BuildPipeline(PatternWriterContext context, PipelineBuilder pipeline)
+            {
+                pipeline.InsertLast(new ExampleAutomaticProperty());
+            }
         }
     }
 }
