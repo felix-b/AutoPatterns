@@ -58,7 +58,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        internal MemberDeclarationSyntax[] TakeWrittenMembers()
+        internal MemberDeclarationSyntax[] TakeMembersWrittenSoFar()
         {
             var members = _writtenMembers.Values.ToArray();
             _writtenMembers.Clear();
@@ -76,118 +76,13 @@ namespace AutoPatterns.Runtime
             var context = new PatternWriterContext(this, typeKey, baseType, primaryInterfaces, secondaryInterfaces);
             var pipeline = _ownerPattern.InternalBuildPipeline(context);
 
-            WriteBaseTypes(context);
-
             for (int i = 0; i < pipeline.Length; i++)
             {
                 pipeline[i].Apply(context);
             }
 
-            var syntax = GetCompleteClassSyntax(context);
+            var syntax = context.Output.ClassWriter.GetCompleteSyntax();
             return syntax;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void WriteBaseTypes(PatternWriterContext context)
-        {
-            _ownerPattern.Library.EnsureMetadataReference(typeof(object));
-
-            if (context.Input.BaseType != null)
-            {
-                AddBaseType(context.Input.BaseType, context);
-            }
-
-            foreach (var interfaceType in context.Input.PrimaryInterfaces)
-            {
-                AddBaseType(interfaceType, context);
-            }
-
-            foreach (var interfaceType in context.Input.SecondaryInterfaces)
-            {
-                AddBaseType(interfaceType, context);
-            }
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void AddBaseType(Type type, PatternWriterContext context)
-        {
-            _ownerPattern.Library.EnsureMetadataReference(type);
-            context.Output.BaseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax(type)));
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private MemberDeclarationSyntax GetCompleteClassSyntax(PatternWriterContext context)
-        {
-            WriteFactoryMethods(context);
-
-            return 
-                NamespaceDeclaration(IdentifierName(context.Output.ClassNamespace))
-                .WithUsings(
-                    SingletonList<UsingDirectiveSyntax>(UsingDirective(IdentifierName("System")))
-                )
-                .WithMembers(
-                    List<MemberDeclarationSyntax>(
-                        new MemberDeclarationSyntax[] {
-                            ClassDeclaration(context.Output.ClassName)
-                                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                                .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(context.Output.BaseTypes)))
-                                .WithMembers(List<MemberDeclarationSyntax>(
-                                    context.Output.GetAllMembers()
-                                ))
-                        }
-                    )
-                );
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void WriteFactoryMethods(PatternWriterContext context)
-        {
-            var constructorList = context.Output.Constructors;
-
-            if (constructorList.Count > 0)
-            {
-                for (int index = 0 ; index < constructorList.Count; index++)
-                {
-                    WriteFactoryMethod(context, constructorList[index], index);
-                }
-            }
-            else
-            {
-                WriteDefaultFactoryMethod(context);
-            }
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void WriteFactoryMethod(PatternWriterContext context, ConstructorDeclarationSyntax constructor, int index)
-        {
-            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier($"FactoryMethod__{index}"))
-                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
-                .WithParameterList(constructor.ParameterList)
-                .WithBody(Block(SingletonList<StatementSyntax>(
-                    ReturnStatement(
-                        ObjectCreationExpression(IdentifierName(context.Output.ClassName))
-                            .WithArgumentList(SyntaxHelper.CopyParametersToArguments(constructor.ParameterList)))
-                 )));
-
-            context.Output.Methods.Add(factoryMethod);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void WriteDefaultFactoryMethod(PatternWriterContext context)
-        {
-            var factoryMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), Identifier("FactoryMethod__0"))
-                .WithModifiers(TokenList(new[] { Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword) }))
-                .WithBody(Block(SingletonList<StatementSyntax>(
-                    ReturnStatement(ObjectCreationExpression(IdentifierName(context.Output.ClassName)).WithArgumentList(ArgumentList())))
-                ));
-
-            context.Output.Methods.Add(factoryMethod);
         }
     }
 }

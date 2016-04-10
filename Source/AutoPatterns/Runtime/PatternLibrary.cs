@@ -131,7 +131,7 @@ namespace AutoPatterns.Runtime
 
         private void TakeMembersFromWriter(PatternWriter writer, List<MemberDeclarationSyntax> allMembers)
         {
-            var members = writer.TakeWrittenMembers();
+            var members = writer.TakeMembersWrittenSoFar();
             allMembers.AddRange(members);
         }
 

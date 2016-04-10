@@ -4,6 +4,7 @@ using AutoPatterns.Extensions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Tests.Examples
 {
@@ -43,16 +44,16 @@ namespace AutoPatterns.Tests.Examples
 
         private void AProperty__Apply(PatternWriterContext context, PropertyInfo declaration)
         {
-            var syntax = SyntaxFactory.PropertyDeclaration(SyntaxHelper.GetTypeSyntax(declaration.PropertyType), SyntaxFactory.Identifier(declaration.Name))
-                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                .WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.List<AccessorDeclarationSyntax>(
-                    new AccessorDeclarationSyntax[] {
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+            var entry = context.Output.ClassWriter.AddProperty(declaration.Name, declaration.PropertyType, declaration);
+                
+            entry.Syntax = entry.Syntax
+                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                .WithAccessorList(AccessorList(List<AccessorDeclarationSyntax>(
+                    new[] {
+                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
                     })
                  ));
-
-            context.Output.Properties.Add(syntax);
         }
     }
 }

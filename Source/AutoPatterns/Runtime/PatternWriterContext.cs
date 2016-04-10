@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AutoPatterns.Extensions;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Runtime
 {
@@ -11,17 +13,22 @@ namespace AutoPatterns.Runtime
     {
         internal PatternWriterContext(PatternWriter writer, TypeKey typeKey, Type baseType, Type[] primaryInterfaces, Type[] secondaryInterfaces)
         {
+            this.Pattern = writer.OwnerPattern;
+            this.Library = writer.OwnerPattern.Library;
             this.Input = new InputContext(
                 typeKey, 
                 baseType, 
                 primaryInterfaces.OrEmptyTypes(),
                 secondaryInterfaces.OrEmptyTypes());
 
-            this.Output = new OutputContext(writer, typeKey);
+            var classWriter = new ClassWriter(this, Pattern.NamespaceName, Pattern.GetClassName(typeKey));
+            this.Output = new OutputContext(classWriter);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public PatternLibrary Library { get; private set; }
+        public AutoPattern Pattern { get; private set; }
         public InputContext Input { get; private set; }
         public OutputContext Output { get; private set; }
 
@@ -49,38 +56,14 @@ namespace AutoPatterns.Runtime
 
         public class OutputContext
         {
-            internal OutputContext(PatternWriter writer, TypeKey typeKey)
+            public OutputContext(ClassWriter classWriter)
             {
-                this.ClassNamespace = writer.OwnerPattern.NamespaceName;
-                this.ClassName = writer.OwnerPattern.GetClassName(typeKey);
+                this.ClassWriter = classWriter;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
-            
-            public string ClassNamespace { get; private set; }
-            public string ClassName { get; private set; }
-            public List<BaseTypeSyntax> BaseTypes { get; } = new List<BaseTypeSyntax>();
-            public List<FieldDeclarationSyntax> Fields { get; } = new List<FieldDeclarationSyntax>();
-            public List<ConstructorDeclarationSyntax> Constructors { get; } = new List<ConstructorDeclarationSyntax>();
-            public List<MethodDeclarationSyntax> Methods { get; } = new List<MethodDeclarationSyntax>();
-            public List<PropertyDeclarationSyntax> Properties { get; } = new List<PropertyDeclarationSyntax>();
-            public List<IndexerDeclarationSyntax> Indexers { get; } = new List<IndexerDeclarationSyntax>();
-            public List<EventDeclarationSyntax> Events { get; } = new List<EventDeclarationSyntax>();
-            public Dictionary<MemberInfo, MemberDeclarationSyntax> SyntaxByDeclaration { get; } = new Dictionary<MemberInfo, MemberDeclarationSyntax>();
 
-            //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-            internal MemberDeclarationSyntax[] GetAllMembers()
-            {
-                return 
-                    Fields.Cast<MemberDeclarationSyntax>()
-                    .Concat(Constructors.Cast<MemberDeclarationSyntax>()
-                    .Concat(Methods.Cast<MemberDeclarationSyntax>()
-                    .Concat(Properties.Cast<MemberDeclarationSyntax>()
-                    .Concat(Indexers.Cast<MemberDeclarationSyntax>()
-                    .Concat(Events.Cast<MemberDeclarationSyntax>())))))
-                    .ToArray();
-            }
+            public ClassWriter ClassWriter { get; private set; }
         }
     }
 }

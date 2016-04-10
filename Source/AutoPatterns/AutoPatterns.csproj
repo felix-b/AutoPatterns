@@ -101,6 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Preprocessing\IPatternTemplate.cs" />
+    <Compile Include="Runtime\ClassWriter.cs" />
     <Compile Include="Runtime\PatternWriter.cs" />
     <Compile Include="Runtime\PatternFactory.cs" />
     <Compile Include="Preprocessing\TemplateMemberMatcher.cs" />
