@@ -5,6 +5,7 @@ using AutoPatterns.Extensions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.Tests.Examples
 {
@@ -46,13 +47,16 @@ namespace AutoPatterns.Tests.Examples
 
         private void AProperty__Apply(PatternWriterContext context, PropertyInfo declaration)
         {
-            //var property = context.Output.ClassWriter.TryGetMember<ClassWriter.PropertyMember>(declaration);
+            var property = context.Output.ClassWriter.TryGetMember<ClassWriter.PropertyMember>(declaration);
 
-            //if (property != null)
-            //{
-            //    property.Syntax = property.Syntax
-            //        .WithAttributeLists(property.Syntax.AttributeLists.Add()
-            //}
+            if (property != null)
+            {
+                context.Library.EnsureMetadataReference(typeof(System.Runtime.Serialization.DataMemberAttribute));
+                property.Syntax = property.Syntax.WithAttributeLists(
+                    property.Syntax.AttributeLists.Add(AttributeList(SeparatedList<AttributeSyntax>(new AttributeSyntax[] {
+                        Attribute(SyntaxHelper.GetTypeSyntax(typeof(System.Runtime.Serialization.DataMemberAttribute)))    
+                    }))));
+            }
         }
     }
 }

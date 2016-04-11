@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -96,16 +97,21 @@ namespace AutoPatterns.Runtime
                 return false;
             }
 
-            var syntaxTree = SyntaxTree(CompilationUnit()
+            var sourceSyntaxTree = SyntaxTree(CompilationUnit()
                 .WithMembers(List(allMembers))
-                .NormalizeWhitespace());
+                .NormalizeWhitespace(indentation: "\t", eol: "\n"));
+            var sourceCode = sourceSyntaxTree.ToString();
 
-            //Console.WriteLine(syntaxTree.ToString());
+            Console.WriteLine(sourceCode);
+
+            var parsedSyntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
+
+            Console.WriteLine(parsedSyntaxTree.ToString());
 
             var compilation = CSharpCompilation
                 .Create(assemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(_references.GetAllReferences())
-                .AddSyntaxTrees(syntaxTree);
+                .AddSyntaxTrees(parsedSyntaxTree);
 
             assemblyBytes = EmitAssemblyBytes(compilation);
             return true;
@@ -141,7 +147,9 @@ namespace AutoPatterns.Runtime
         {
             using (var output = new MemoryStream())// (capacity: 16384))
             {
-                EmitResult result = compilation.Emit(output);
+                var clock = Stopwatch.StartNew();
+                EmitResult result = compilation.Emit(output);//, options: options);
+                Console.WriteLine(">> COMPILE TIME, ms = {0}", clock.ElapsedMilliseconds);
 
                 if (!result.Success)
                 {

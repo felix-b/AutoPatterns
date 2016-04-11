@@ -47,9 +47,10 @@ namespace AutoPatterns.Runtime
         public PropertyMember AddProperty(string name, Type propertyType, PropertyInfo declaration)
         {
             var syntax = PropertyDeclaration(SyntaxHelper.GetTypeSyntax(declaration.PropertyType), Identifier(name));
-            var entry = new PropertyMember(name, syntax, declaration);
-            _properties.Add(entry);
-            return entry;
+            var member = new PropertyMember(name, syntax, declaration);
+            _properties.Add(member);
+            RegisterDeclaration(member);
+            return member;
         }
 
         //-------------------------------------------------------------------------------------------------------------------------------------------------

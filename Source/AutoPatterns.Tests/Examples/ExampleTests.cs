@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using AutoPatterns.Runtime;
 using NUnit.Framework;
@@ -11,12 +12,45 @@ namespace AutoPatterns.Tests.Examples
     public class ExampleTests
     {
         [Test]
-        public void CanGenerateObjectByAutomaticPropertyTemplate()
+        public void ExampleAutomaticProperty()
         {
             //-- arrange
 
             var library = new PatternLibrary(assemblyName: this.GetType().Name);
-            var pattern = new ExampleAutomaticPropertyPattern(library);
+            var pattern = new TestPattern(library, pipeline => {
+                pipeline.InsertLast(new ExampleAutomaticProperty());                    
+            });
+
+            //-- act
+
+            pattern.WriteExampleObject<ExampleAncestors.IScalarProperties>();
+
+            var obj = pattern.CreateExampleObject<ExampleAncestors.IScalarProperties>();
+            obj.IntValue = 123;
+            obj.StringValue = "ABC";
+            obj.EnumValue = DayOfWeek.Thursday;
+            obj.TimeSpanValue = TimeSpan.FromSeconds(123);
+
+            //-- assert
+
+            obj.IntValue.ShouldBe(123);
+            obj.StringValue.ShouldBe("ABC");
+            obj.EnumValue.ShouldBe(DayOfWeek.Thursday);
+            obj.TimeSpanValue.ShouldBe(TimeSpan.FromSeconds(123));
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void ExampleAutomaticPropertyAndDataContract()
+        {
+            //-- arrange
+
+            var library = new PatternLibrary(assemblyName: this.GetType().Name);
+            var pattern = new TestPattern(library, pipeline => {
+                pipeline.InsertLast(new ExampleAutomaticProperty());
+                pipeline.InsertLast(new ExampleDataContract());
+            });
 
             //-- act
 
@@ -43,9 +77,12 @@ namespace AutoPatterns.Tests.Examples
         {
             for (int i = 0 ; i < 50 ; i++)
             {
-                var clock = Stopwatch.StartNew();
-                CanGenerateObjectByAutomaticPropertyTemplate();
-                Console.WriteLine(clock.ElapsedMilliseconds);
+                try
+                {
+                    //ExampleAutomaticProperty();
+                    ExampleAutomaticPropertyAndDataContract();
+                }
+                catch {  }
             }
         }
 
@@ -58,11 +95,16 @@ namespace AutoPatterns.Tests.Examples
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class ExampleAutomaticPropertyPattern : AutoPattern
+        public class TestPattern : AutoPattern
         {
-            public ExampleAutomaticPropertyPattern(PatternLibrary library)
+            private readonly Action<PipelineBuilder> _onBuildPipeline;
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public TestPattern(PatternLibrary library, Action<PipelineBuilder> onBuildPipeline)
                 : base(library)
             {
+                _onBuildPipeline = onBuildPipeline;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,7 +125,7 @@ namespace AutoPatterns.Tests.Examples
 
             protected override void BuildPipeline(PatternWriterContext context, PipelineBuilder pipeline)
             {
-                pipeline.InsertLast(new ExampleAutomaticProperty());
+                _onBuildPipeline(pipeline);
             }
         }
     }

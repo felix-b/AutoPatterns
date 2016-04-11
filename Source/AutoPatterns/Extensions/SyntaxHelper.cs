@@ -18,14 +18,14 @@ namespace AutoPatterns.Extensions
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static TypeSyntax GetTypeSyntax(Type type)
+        public static NameSyntax GetTypeSyntax(Type type)
         {
             return GetTypeSyntax(GetTypeFullNameParts(type));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static TypeSyntax GetTypeSyntax(string[] parts)
+        public static NameSyntax GetTypeSyntax(string[] parts)
         {
             return GetTypeSyntax(parts, parts.Length);
         }
