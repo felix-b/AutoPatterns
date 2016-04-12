@@ -92,6 +92,8 @@
       <HintPath>..\packages\System.Reflection.Metadata.1.2.0\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -100,6 +102,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OutOfProcess\IRemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\RemoteEndpointFactory.cs" />
+    <Compile Include="OutOfProcess\RemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\RemotePatternCompiler.cs" />
     <Compile Include="Preprocessing\IPatternTemplate.cs" />
     <Compile Include="Runtime\ClassWriter.cs" />
     <Compile Include="Runtime\InProcessPatternCompiler.cs" />

@@ -42,13 +42,50 @@ namespace AutoPatterns.Runtime
         //    //_baseTypes.Add(SimpleBaseType(SyntaxHelper.GetTypeSyntax()));
         //}
 
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public BaseTypeSyntax AddBaseType(Type type)
+        {
+            _context.Library.EnsureMetadataReference(type);
+
+            var syntax = SimpleBaseType(SyntaxHelper.GetTypeSyntax(type));
+            _baseTypes.Add(syntax);
+
+            return syntax;
+        }
+
         //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PropertyMember AddProperty(string name, Type propertyType, PropertyInfo declaration)
+        public PropertyMember AddPublicProperty(string name, Type propertyType, PropertyInfo declaration = null)
         {
-            var syntax = PropertyDeclaration(SyntaxHelper.GetTypeSyntax(declaration.PropertyType), Identifier(name));
+            var syntax = PropertyDeclaration(
+                SyntaxHelper.GetTypeSyntax(propertyType), 
+                Identifier(name)
+            )
+            .WithModifiers(TokenList(
+                Token(SyntaxKind.PublicKeyword)
+            ));
+
             var member = new PropertyMember(name, syntax, declaration);
             _properties.Add(member);
+            RegisterDeclaration(member);
+            return member;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public MethodMember AddPublicVoidMethod(string name, MethodInfo declaration = null)
+        {
+            var syntax = MethodDeclaration(
+                PredefinedType(Token(SyntaxKind.VoidKeyword)),
+                Identifier(name)
+            )
+            .WithModifiers(TokenList(
+                Token(SyntaxKind.PublicKeyword)
+            ));
+
+            var member = new MethodMember(name, syntax, declaration);
+            _methods.Add(member);
             RegisterDeclaration(member);
             return member;
         }
@@ -140,18 +177,6 @@ namespace AutoPatterns.Runtime
             {
                 AddBaseType(interfaceType);
             }
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private BaseTypeSyntax AddBaseType(Type type)
-        {
-            _context.Library.EnsureMetadataReference(type);
-
-            var syntax = SimpleBaseType(SyntaxHelper.GetTypeSyntax(type));
-            _baseTypes.Add(syntax);
-
-            return syntax;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

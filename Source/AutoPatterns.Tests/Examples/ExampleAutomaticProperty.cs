@@ -44,10 +44,9 @@ namespace AutoPatterns.Tests.Examples
 
         private void AProperty__Apply(PatternWriterContext context, PropertyInfo declaration)
         {
-            var entry = context.Output.ClassWriter.AddProperty(declaration.Name, declaration.PropertyType, declaration);
+            var entry = context.Output.ClassWriter.AddPublicProperty(declaration.Name, declaration.PropertyType, declaration);
                 
             entry.Syntax = entry.Syntax
-                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                 .WithAccessorList(AccessorList(List<AccessorDeclarationSyntax>(
                     new[] {
                         AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),

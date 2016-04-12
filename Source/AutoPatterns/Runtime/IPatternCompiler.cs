@@ -10,7 +10,7 @@ namespace AutoPatterns.Runtime
     {
         bool CompileAssembly(
             string assemblyName, 
-            string sourceCode, 
+            string sourceCode,
             string[] references,
             bool enableDebug,
             out byte[] dllBytes,

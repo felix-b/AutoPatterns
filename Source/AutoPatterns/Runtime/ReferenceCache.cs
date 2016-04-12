@@ -12,23 +12,23 @@ namespace AutoPatterns.Runtime
     internal class ReferenceCache
     {
         private readonly object _syncRoot = new object();
-        private ImmutableDictionary<string, MetadataReference> _referenceByAssemblyName = ImmutableDictionary.Create<string, MetadataReference>();
+        private ImmutableDictionary<string, MetadataReference> _referenceByAssemblyName = 
+            ImmutableDictionary.Create<string, MetadataReference>(StringComparer.InvariantCultureIgnoreCase);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public MetadataReference EnsureReference(Assembly assembly)
+        public MetadataReference EnsureReferenceCached(string assemblyFilePath)
         {
-            var cacheKey = assembly.FullName;
             MetadataReference reference;
 
-            if (!_referenceByAssemblyName.TryGetValue(cacheKey, out reference))
+            if (!_referenceByAssemblyName.TryGetValue(assemblyFilePath, out reference))
             {
                 lock (_syncRoot)
                 {
-                    if (!_referenceByAssemblyName.TryGetValue(cacheKey, out reference))
+                    if (!_referenceByAssemblyName.TryGetValue(assemblyFilePath, out reference))
                     {
-                        reference = MetadataReference.CreateFromFile(assembly.Location);
-                        _referenceByAssemblyName = _referenceByAssemblyName.Add(cacheKey, reference);
+                        reference = MetadataReference.CreateFromFile(assemblyFilePath);
+                        _referenceByAssemblyName = _referenceByAssemblyName.Add(assemblyFilePath, reference);
                     }
                 }
             }
@@ -38,14 +38,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public MetadataReference EnsureReference(Type type)
-        {
-            return EnsureReference(type.GetTypeInfo().Assembly);
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public IEnumerable<MetadataReference> GetAllReferences()
+        public IEnumerable<MetadataReference> GetAllCachedReferences()
         {
             return _referenceByAssemblyName.Values;
         }

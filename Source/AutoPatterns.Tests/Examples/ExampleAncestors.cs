@@ -11,5 +11,12 @@ namespace AutoPatterns.Tests.Examples
             DayOfWeek EnumValue { get; set; }
             TimeSpan TimeSpanValue { get; set; }
         }
+
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public interface ITryDebugging
+        {
+            void TryDebugging();
+        }
     }
 }

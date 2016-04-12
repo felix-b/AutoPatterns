@@ -15,20 +15,59 @@ namespace AutoPatterns.Runtime
 {
     public class PatternLibrary
     {
+        private readonly IPatternCompiler _compiler;
+        private readonly bool _enableDebug;
         private readonly string _assemblyName;
+        private readonly string _assemblyDirectory;
         private readonly object _syncRoot = new object();
-        private readonly ReferenceCache _references;
+        private ImmutableHashSet<string> _referencePaths;
         private ImmutableArray<PatternWriter> _writers;
         private ImmutableArray<Assembly> _assemblies;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(string assemblyName, params Assembly[] preloadedAssemblies)
+        public PatternLibrary(string assemblyName)
+            : this(new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false)
         {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public PatternLibrary(string assemblyName, params Assembly[] preloadedAssemblies)
+            : this(new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public PatternLibrary(IPatternCompiler compiler, string assemblyName)
+            : this(compiler, assemblyName, assemblyDirectory: null, enableDebug: false)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public PatternLibrary(IPatternCompiler compiler, string assemblyName, params Assembly[] preloadedAssemblies)
+            : this(compiler, assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
+        {
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public PatternLibrary(IPatternCompiler compiler, string assemblyName, string assemblyDirectory, bool enableDebug, params Assembly[] preloadedAssemblies)
+        {
+            _compiler = compiler;
+            _enableDebug = enableDebug;
             _assemblyName = assemblyName;
-            _references = new ReferenceCache();
+            _assemblyDirectory = assemblyDirectory;
+            _referencePaths = ImmutableHashSet.Create<string>(StringComparer.InvariantCultureIgnoreCase);
             _writers = ImmutableArray.Create<PatternWriter>();
             _assemblies = ImmutableArray.Create<Assembly>(preloadedAssemblies);
+
+            if (!string.IsNullOrEmpty(assemblyDirectory))
+            {
+                Directory.CreateDirectory(assemblyDirectory);
+            }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +79,7 @@ namespace AutoPatterns.Runtime
                 var uniqueAssemblyName = $"{_assemblyName}_{_assemblies.Length}";
                 Assembly compiledAssembly;
 
-                if (CompileAndLoadAssembly(uniqueAssemblyName, out compiledAssembly))
+                if (CompileAndLoad(uniqueAssemblyName, out compiledAssembly))
                 {
                     _assemblies = _assemblies.Add(compiledAssembly);
                     return true;
@@ -69,21 +108,89 @@ namespace AutoPatterns.Runtime
 
         public void EnsureMetadataReference(Assembly assembly)
         {
-            _references.EnsureReference(assembly);
+            lock (_syncRoot)
+            {
+                _referencePaths = _referencePaths.Add(assembly.Location);
+            }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public void EnsureMetadataReference(Type type)
         {
-            _references.EnsureReference(type);
+            lock (_syncRoot)
+            {
+                _referencePaths = _referencePaths.Add(type.Assembly.Location);
+            }
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAssembly(string assemblyName, out byte[] assemblyBytes)
+        private bool CompileAndLoad(string uniqueAssemblyName, out Assembly compiledAssembly)
         {
-            var allMembers = new List<MemberDeclarationSyntax>();
+            byte[] dllBytes;
+            byte[] pdbBytes;
+
+            if (CompileAssembly(uniqueAssemblyName, out dllBytes, out pdbBytes))
+            {
+                if (_enableDebug)
+                {
+                    File.WriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"), dllBytes);
+                    File.WriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".pdb"), pdbBytes);
+                    compiledAssembly = Assembly.LoadFrom(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"));
+                }
+                else
+                {
+                    compiledAssembly = Assembly.Load(dllBytes);
+                }
+
+                return true;
+            }
+
+            compiledAssembly = null;
+            return false;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private bool CompileAssembly(string uniqueAssemblyName, out byte[] dllBytes, out byte[] pdbBytes)
+        {
+            List<MemberDeclarationSyntax> allMembers;
+
+            if (ListMembersToCompile(out allMembers))
+            {
+                var sourceCode = CreateSourceCode(uniqueAssemblyName, allMembers);
+                CompileOrThrow(uniqueAssemblyName, out dllBytes, out pdbBytes, sourceCode);
+                return true;
+            }
+
+            dllBytes = null;
+            pdbBytes = null;
+            return false;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private string CreateSourceCode(string uniqueAssemblyName, List<MemberDeclarationSyntax> allMembers)
+        {
+            var sourceSyntaxTree = SyntaxTree(CompilationUnit().WithMembers(List(allMembers)).NormalizeWhitespace(indentation: "\t", eol: "\n"));
+
+            var sourceCode = sourceSyntaxTree.ToString();
+
+            if (_enableDebug)
+            {
+                var sourceFilePath = Path.Combine(_assemblyDirectory,  uniqueAssemblyName + ".cs");
+                File.WriteAllText(sourceFilePath, sourceCode);
+                sourceCode = $"#line 1 \"{sourceFilePath}\"{Environment.NewLine}" + sourceCode;
+            }
+            return sourceCode;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private bool ListMembersToCompile(out List<MemberDeclarationSyntax> allMembers)
+        {
+            allMembers = new List<MemberDeclarationSyntax>();
             var currentWriters = _writers;
 
             foreach (var writer in currentWriters)
@@ -91,46 +198,27 @@ namespace AutoPatterns.Runtime
                 TakeMembersFromWriter(writer, allMembers);
             }
 
-            if (allMembers.Count == 0)
-            {
-                assemblyBytes = null;
-                return false;
-            }
-
-            var sourceSyntaxTree = SyntaxTree(CompilationUnit()
-                .WithMembers(List(allMembers))
-                .NormalizeWhitespace(indentation: "\t", eol: "\n"));
-            var sourceCode = sourceSyntaxTree.ToString();
-
-            Console.WriteLine(sourceCode);
-
-            var parsedSyntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
-
-            Console.WriteLine(parsedSyntaxTree.ToString());
-
-            var compilation = CSharpCompilation
-                .Create(assemblyName, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(_references.GetAllReferences())
-                .AddSyntaxTrees(parsedSyntaxTree);
-
-            assemblyBytes = EmitAssemblyBytes(compilation);
-            return true;
+            return (allMembers.Count > 0);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private bool CompileAndLoadAssembly(string assemblyName, out Assembly compiledAssembly)
+        private void CompileOrThrow(string uniqueAssemblyName, out byte[] dllBytes, out byte[] pdbBytes, string sourceCode)
         {
-            byte[] assemblyBytes;
+            string[] errors;
+            var success = _compiler.CompileAssembly(
+                uniqueAssemblyName, 
+                sourceCode, 
+                _referencePaths.ToArray(), 
+                _enableDebug, 
+                out dllBytes, 
+                out pdbBytes, 
+                out errors);
 
-            if (CompileAssembly(assemblyName, out assemblyBytes))
+            if (!success)
             {
-                compiledAssembly = Assembly.Load(assemblyBytes);
-                return true;
+                throw new Exception("Compile failed:\r\n" + string.Join("\r\n", errors));
             }
-
-            compiledAssembly = null;
-            return false;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,29 +229,29 @@ namespace AutoPatterns.Runtime
             allMembers.AddRange(members);
         }
 
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+        ////-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private byte[] EmitAssemblyBytes(CSharpCompilation compilation)
-        {
-            using (var output = new MemoryStream())// (capacity: 16384))
-            {
-                var clock = Stopwatch.StartNew();
-                EmitResult result = compilation.Emit(output);//, options: options);
-                Console.WriteLine(">> COMPILE TIME, ms = {0}", clock.ElapsedMilliseconds);
+        //private byte[] EmitAssemblyBytes(CSharpCompilation compilation)
+        //{
+        //    using (var output = new MemoryStream())// (capacity: 16384))
+        //    {
+        //        var clock = Stopwatch.StartNew();
+        //        EmitResult result = compilation.Emit(output);//, options: options);
+        //        Console.WriteLine(">> COMPILE TIME, ms = {0}", clock.ElapsedMilliseconds);
 
-                if (!result.Success)
-                {
-                    IEnumerable<Diagnostic> failures =
-                        result.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
+        //        if (!result.Success)
+        //        {
+        //            IEnumerable<Diagnostic> failures =
+        //                result.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
 
-                    throw new Exception(
-                        "Compile failed:" +
-                        System.Environment.NewLine +
-                        string.Join(System.Environment.NewLine, failures.Select(f => $"{f.Id}: {f.GetMessage()}")));
-                }
+        //            throw new Exception(
+        //                "Compile failed:" +
+        //                System.Environment.NewLine +
+        //                string.Join(System.Environment.NewLine, failures.Select(f => $"{f.Id}: {f.GetMessage()}")));
+        //        }
 
-                return output.ToArray();
-            }
-        }
+        //        return output.ToArray();
+        //    }
+        //}
     }
 }
