@@ -3,58 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.ServiceModel;
-using System.ServiceModel.Channels;
-using System.ServiceModel.Description;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace AutoPatterns.OutOfProcess
 {
-    public class RemoteEndpointFactory
+    public abstract class RemoteEndpointFactory
     {
-        private readonly int _tcpPortNumber;
-        private readonly ChannelFactory<IRemoteCompilerService> _channelFactory;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public RemoteEndpointFactory(int tcpPortNumber)
-        {
-            _tcpPortNumber = tcpPortNumber;
-            _channelFactory = new ChannelFactory<IRemoteCompilerService>(CreateServiceEndpoint());
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public IRemoteCompilerService CreateClient()
-        {
-            return _channelFactory.CreateChannel();
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        public void CallCompilerService(Action<IRemoteCompilerService> doCall)
-        {
-            var client = CreateClient();
-
-            try
-            {
-                doCall(client);
-                ((ICommunicationObject)client).Close();
-            }
-            catch (CommunicationException)
-            {
-                ((ICommunicationObject)client).Abort();
-                throw;
-            }
-            catch
-            {
-                ((ICommunicationObject)client).Close();
-                throw;
-            }
-        }
+        public abstract IServiceHost CreateServiceHost(RemoteCompilerService service);
+        public abstract IRemoteCompilerService CreateClient();
+        public abstract void CallCompilerService(Action<IRemoteCompilerService> doCall);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -93,32 +52,6 @@ namespace AutoPatterns.OutOfProcess
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public ServiceHost CreateServiceHost(RemoteCompilerService service)
-        {
-            var host = new ServiceHost(service);
-            host.AddServiceEndpoint(CreateServiceEndpoint());
-            return host;
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private ServiceEndpoint CreateServiceEndpoint()
-        {
-            var contract = ContractDescription.GetContract(typeof(IRemoteCompilerService));
-            return new ServiceEndpoint(contract, CreateTcpBinding(), new EndpointAddress($"net.tcp://localhost:{_tcpPortNumber}"));
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private Binding CreateTcpBinding()
-        {
-            return new NetTcpBinding(SecurityMode.None) {
-                ReaderQuotas = XmlDictionaryReaderQuotas.Max
-            };
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         private void StartCompilerHostProcess()
         {
             var directory = Path.GetDirectoryName(this.GetType().Assembly.Location);
@@ -148,6 +81,6 @@ namespace AutoPatterns.OutOfProcess
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public static string CompilerHostMutexName = @"Global\8FDE12BC-3DEC-48AA-913F-3D392883356F";
+        public static string CompilerHostMutexName { get; } = @"Global\8FDE12BC-3DEC-48AA-913F-3D392883356F";
     }
 }

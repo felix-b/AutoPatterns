@@ -89,9 +89,9 @@ namespace AutoPatterns.Runtime
             {
                 using (var pdbStream = context.EnableDebug ? new MemoryStream() : null)
                 {
-                    var clock = Stopwatch.StartNew();
+                    //var clock = Stopwatch.StartNew();
                     EmitResult result = context.Compilation.Emit(dllStream, pdbStream);
-                    Console.WriteLine(">> COMPILE TIME, ms = {0}", clock.ElapsedMilliseconds);
+                    //Console.WriteLine(">> COMPILE TIME, ms = {0}", clock.ElapsedMilliseconds);
 
                     context.Success = result.Success;
 

@@ -31,7 +31,17 @@ namespace AutoPatterns.CompilerHost
             }
             catch (Exception e)
             {
-                Console.WriteLine($"AutoPatterns Compiler Service >> ABNORMALLY TERMINATED! {e.GetType().Name}: {e.Message}");
+                string message;
+                var aggregate = e as AggregateException;
+                if (aggregate != null)
+                {
+                    message = string.Join("; ", aggregate.Flatten().InnerExceptions.Select(x => x.Message));
+                }
+                else
+                {
+                    message = e.Message;
+                }
+                Console.WriteLine($"AutoPatterns Compiler Service >> ABNORMALLY TERMINATED! {e.GetType().Name}: {message}");
                 return 2;
             }
             finally
@@ -49,7 +59,7 @@ namespace AutoPatterns.CompilerHost
 
             service.ShutdownRequested += (sender, e) => shutdownEvent.Set();
 
-            var endpointFactory = new RemoteEndpointFactory(tcpPortNumber: 50555);
+            var endpointFactory = new TcpRemoteEndpointFactory(tcpPortNumber: 50555);
             var serviceHost = endpointFactory.CreateServiceHost(service);
 
             serviceHost.Open();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -26,7 +27,7 @@ namespace AutoPatterns.OutOfProcess
 
         public CompileReply Compile(CompileRequest request)
         {
-            Console.WriteLine($"Processing COMPILE REQUEST, assemblyName={request.AssemblyName}");
+            Console.WriteLine($"RCS > Processing COMPILE REQUEST, assemblyName={request.AssemblyName}");
 
             byte[] dllBytes;
             byte[] pdbBytes;
@@ -34,6 +35,8 @@ namespace AutoPatterns.OutOfProcess
 
             try
             {
+                var clock = Stopwatch.StartNew();
+
                 var success = _compiler.CompileAssembly(
                     request.AssemblyName,
                     request.SourceCode,
@@ -43,7 +46,10 @@ namespace AutoPatterns.OutOfProcess
                     out pdbBytes,
                     out errors);
 
-                Console.WriteLine($"> done {request.AssemblyName}: {(success ? "SUCCESS" : "FAILURE")}, {errors.Length} errors/warnings.");
+                var statusText = (success ? "SUCCESS" : "FAILURE");
+                var errorsWarnings = (errors?.Length).GetValueOrDefault();
+
+                Console.WriteLine($"RCS > done {request.AssemblyName}: {statusText}, {errorsWarnings} errors/warnings, {clock.ElapsedMilliseconds} ms.");
 
                 return new CompileReply() {
                     DllBytes = dllBytes,
@@ -54,7 +60,7 @@ namespace AutoPatterns.OutOfProcess
             }
             catch (Exception e)
             {
-                Console.WriteLine("> FAILED WITH EXCEPTION! {0}: {1}", e.GetType().Name, e.Message);
+                Console.WriteLine("RCS > FAILED WITH EXCEPTION! {0}: {1}", e.GetType().Name, e.Message);
                 throw;
             }
         }

@@ -103,9 +103,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="OutOfProcess\IRemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\IServiceHost.cs" />
     <Compile Include="OutOfProcess\RemoteEndpointFactory.cs" />
+    <Compile Include="OutOfProcess\WcfRemoteEndpointFactory.cs" />
     <Compile Include="OutOfProcess\RemoteCompilerService.cs" />
     <Compile Include="OutOfProcess\RemotePatternCompiler.cs" />
+    <Compile Include="OutOfProcess\TcpRemoteEndpointFactory.cs" />
     <Compile Include="Preprocessing\IPatternTemplate.cs" />
     <Compile Include="Runtime\ClassWriter.cs" />
     <Compile Include="Runtime\InProcessPatternCompiler.cs" />

@@ -17,7 +17,7 @@ namespace AutoPatterns.OutOfProcess
 
         public RemotePatternCompiler(int tcpPortNumber = 50555)
         {
-            _endpointFactory = new RemoteEndpointFactory(tcpPortNumber);
+            _endpointFactory = new TcpRemoteEndpointFactory(tcpPortNumber);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
