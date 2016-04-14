@@ -248,7 +248,11 @@ namespace AutoPatterns.OutOfProcess
 
             public TcpServiceClient(int tcpPortNumber)
             {
-                _tcpClient = new TcpClient("localhost", tcpPortNumber);
+                var clock = Stopwatch.StartNew(); 
+                _tcpClient = new TcpClient();
+                Console.WriteLine($"PERF >> TcpServiceClient::.ctor # 0 >> {clock.ElapsedMilliseconds} ms");
+                _tcpClient.Connect(IPAddress.Parse("127.0.0.1"), tcpPortNumber);
+                Console.WriteLine($"PERF >> TcpServiceClient::.ctor # 1 >> {clock.ElapsedMilliseconds} ms");
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -268,6 +272,8 @@ namespace AutoPatterns.OutOfProcess
 
             public void Hello()
             {
+                var clock = Stopwatch.StartNew();
+
                 using (var stream = _tcpClient.GetStream())
                 {
                     Protocol.WriteActionByte(Protocol.ActionByte.Hello, stream);
@@ -278,16 +284,22 @@ namespace AutoPatterns.OutOfProcess
                         throw Protocol.ReadFault(stream);
                     }
                 }
+
+                Console.WriteLine($"PERF: HELLO - {clock.ElapsedMilliseconds} ms");
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             public CompileReply Compile(CompileRequest request)
             {
+                var clock = Stopwatch.StartNew();
+
                 using (var stream = _tcpClient.GetStream())
                 {
                     Protocol.WriteActionByte(Protocol.ActionByte.Compile, stream);
                     Protocol.WriteCompileRequest(request, stream);
+
+                    Console.WriteLine($"PERF >> TcpServiceClient::Compile #0 - {clock.ElapsedMilliseconds} ms");
 
                     stream.Flush();
 
@@ -296,6 +308,7 @@ namespace AutoPatterns.OutOfProcess
                         throw Protocol.ReadFault(stream);
                     }
 
+                    Console.WriteLine($"PERF >> TcpServiceClient::Compile #1 - {clock.ElapsedMilliseconds} ms");
                     return Protocol.ReadCompileReply(stream);
                 }
             }
@@ -348,7 +361,7 @@ namespace AutoPatterns.OutOfProcess
             public void Open()
             {
                 _cancellation = new CancellationTokenSource();
-                _tcpListener = new TcpListener(IPAddress.Any, _tcpPortNumber);
+                _tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), _tcpPortNumber);
                 _listenerThread = RunListenerThread();
 
                 for (int i = 0 ; i < _workerThreads.Length ; i++)
@@ -403,6 +416,7 @@ namespace AutoPatterns.OutOfProcess
                     try
                     {
                         socket = await _tcpListener.AcceptSocketAsync();
+                        Console.WriteLine("TCP LISTENER SOCKET ACCEPTED");
                     }
                     catch (TaskCanceledException)
                     {

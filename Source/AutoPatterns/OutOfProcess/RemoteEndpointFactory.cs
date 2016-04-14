@@ -57,7 +57,7 @@ namespace AutoPatterns.OutOfProcess
             var directory = Path.GetDirectoryName(this.GetType().Assembly.Location);
             var compilerHostExeFilePath = Path.Combine(directory, "AutoPatterns.CompilerHost.exe");
             ProcessStartInfo info = new ProcessStartInfo(compilerHostExeFilePath);
-            info.UseShellExecute = false; // causes consoles to share window 
+            info.UseShellExecute = true; // child process will use its own console window
 
             Console.WriteLine("STARTING COMPILER HOST...");
             Process.Start(info);

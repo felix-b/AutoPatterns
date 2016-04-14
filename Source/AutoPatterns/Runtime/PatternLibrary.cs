@@ -155,12 +155,21 @@ namespace AutoPatterns.Runtime
 
         private bool CompileAssembly(string uniqueAssemblyName, out byte[] dllBytes, out byte[] pdbBytes)
         {
+            var clock = Stopwatch.StartNew();
+
             List<MemberDeclarationSyntax> allMembers;
 
             if (ListMembersToCompile(out allMembers))
             {
+                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 1 >> {clock.ElapsedMilliseconds} ms");
+
                 var sourceCode = CreateSourceCode(uniqueAssemblyName, allMembers);
+
+                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 2 >> {clock.ElapsedMilliseconds} ms");
+
                 CompileOrThrow(uniqueAssemblyName, out dllBytes, out pdbBytes, sourceCode);
+
+                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 3 >> {clock.ElapsedMilliseconds} ms");
                 return true;
             }
 

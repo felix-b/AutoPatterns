@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -33,6 +34,8 @@ namespace AutoPatterns.OutOfProcess
             out byte[] pdbBytes,
             out string[] errors)
         {
+            var clock = Stopwatch.StartNew();
+
             var request = new CompileRequest() {
                 AssemblyName = assemblyName,
                 SourceCode = sourceCode,
@@ -44,14 +47,22 @@ namespace AutoPatterns.OutOfProcess
 
             try
             {
+                Console.WriteLine($"PERF >> RemotePatternCompiler::CompileAssembly # 1 >> {clock.ElapsedMilliseconds} ms");
+
                 _endpointFactory.CallCompilerService(
                     client => {
+                        Console.WriteLine($"PERF >> RemotePatternCompiler::CompileAssembly # 2 >> {clock.ElapsedMilliseconds} ms");
                         reply = client.Compile(request);
+                        Console.WriteLine($"PERF >> RemotePatternCompiler::CompileAssembly # 3 >> {clock.ElapsedMilliseconds} ms");
                     });
+
+                Console.WriteLine($"PERF >> RemotePatternCompiler::CompileAssembly # 4 >> {clock.ElapsedMilliseconds} ms");
 
                 dllBytes = reply.DllBytes;
                 pdbBytes = reply.PdbBytes;
                 errors = reply.Errors?.ToArray();
+
+                Console.WriteLine($"PERF >> RemotePatternCompiler::CompileAssembly # 5 >> {clock.ElapsedMilliseconds} ms");
 
                 return reply.Success;
             }
