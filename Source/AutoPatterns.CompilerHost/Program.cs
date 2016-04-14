@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoPatterns.OutOfProcess;
+using AutoPatterns.OutOfProcess.RequestReply;
 
 namespace AutoPatterns.CompilerHost
 {
@@ -31,17 +32,7 @@ namespace AutoPatterns.CompilerHost
             }
             catch (Exception e)
             {
-                string message;
-                var aggregate = e as AggregateException;
-                if (aggregate != null)
-                {
-                    message = string.Join("; ", aggregate.Flatten().InnerExceptions.Select(x => x.Message));
-                }
-                else
-                {
-                    message = e.Message;
-                }
-                Console.WriteLine($"AutoPatterns Compiler Service >> ABNORMALLY TERMINATED! {e.GetType().Name}: {message}");
+                Console.WriteLine($"AutoPatterns Compiler Service >> ABNORMALLY TERMINATED! {e.GetType().Name}: {GetTerminationExceptionMessage(e)}");
                 return 2;
             }
             finally
@@ -56,6 +47,8 @@ namespace AutoPatterns.CompilerHost
         {
             var shutdownEvent = new ManualResetEvent(initialState: false);
             var service = new RemoteCompilerService();
+
+            Task.Run(() => WarmUp(service));
 
             service.ShutdownRequested += (sender, e) => shutdownEvent.Set();
 
@@ -78,6 +71,36 @@ namespace AutoPatterns.CompilerHost
             serviceHost.Close(TimeSpan.FromSeconds(10));
 
             Console.WriteLine("AutoPatterns Compiler Service >> STOPPED.");
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static void WarmUp(RemoteCompilerService service)
+        {
+            var request = new CompileRequest() {
+                AssemblyName = "WarmUp_0",
+                SourceCode = "using System;namespace WarmUp{[Serializable] public class MyClass{public void Print(){Console.WriteLine(\"Warming up\");}}}",
+                ReferencePaths = new[] { typeof(object).Assembly.Location },
+                EnableDebug = false
+            };
+
+            service.Compile(request);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static string GetTerminationExceptionMessage(Exception e)
+        {
+            var aggregate = e as AggregateException;
+
+            if (aggregate != null)
+            {
+                return string.Join("; ", aggregate.Flatten().InnerExceptions.Select(x => x.Message));
+            }
+            else
+            {
+                return e.Message;
+            }
         }
     }
 }
