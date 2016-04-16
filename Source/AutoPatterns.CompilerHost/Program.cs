@@ -26,7 +26,7 @@ namespace AutoPatterns.CompilerHost
 
             try
             {
-                RunCompilerHost();
+                RunCompilerHost(args);
                 Console.WriteLine("AutoPatterns Compiler Service >> GOODBYE.");
                 return 0;
             }
@@ -43,12 +43,20 @@ namespace AutoPatterns.CompilerHost
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static void RunCompilerHost()
+        private static void RunCompilerHost(string[] args)
         {
             var shutdownEvent = new ManualResetEvent(initialState: false);
             var service = new RemoteCompilerService();
 
-            Task.Run(() => WarmUp(service));
+            if (!args.Any(arg => StringComparer.InvariantCultureIgnoreCase.Equals(arg, "NOWRAMUP")))
+            {
+                Console.WriteLine("AutoPatterns Compiler Service >> WARMING UP . . .");
+                Task.Run(() => WarmUp(service));
+            }
+            else
+            {
+                Console.WriteLine("AutoPatterns Compiler Service >> WARM-UP suppressed through command line.");
+            }
 
             service.ShutdownRequested += (sender, e) => shutdownEvent.Set();
 

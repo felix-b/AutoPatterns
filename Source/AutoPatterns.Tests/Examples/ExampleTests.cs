@@ -18,7 +18,7 @@ namespace AutoPatterns.Tests.Examples
         {
             //-- arrange
 
-            var library = TestLibrary.CreateLibrary(assemblyName: this.GetType().Name);
+            var library = TestLibrary.CreateLibraryWithDebug(assemblyName: this.GetType().Name);
             var pattern = new TestPattern(library, pipeline => {
                 pipeline.InsertLast(new ExampleAutomaticProperty());
             });
@@ -48,7 +48,7 @@ namespace AutoPatterns.Tests.Examples
         {
             //-- arrange
 
-            var library = TestLibrary.CreateLibrary(assemblyName: this.GetType().Name);
+            var library = TestLibrary.CreateLibraryWithDebug(assemblyName: this.GetType().Name);
             var pattern = new TestPattern(library, pipeline => {
                 pipeline.InsertLast(new ExampleAutomaticProperty());
                 pipeline.InsertLast(new ExampleDataContract());

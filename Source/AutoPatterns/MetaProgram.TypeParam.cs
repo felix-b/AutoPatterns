@@ -5,6 +5,8 @@
         public static class TypeParam
         {
             public interface IPrimaryContract {  }
+            public class Field { }
+            public class Property { }
         }
     }
 }

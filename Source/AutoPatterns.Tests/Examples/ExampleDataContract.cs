@@ -13,7 +13,7 @@ namespace AutoPatterns.Tests.Examples
     [DataContract(Name = MetaProgram.Constant.String1, Namespace = MetaProgram.Constant.String2)]
     public partial class ExampleDataContract
     {
-        [MetaProgram.Annotation.MetaMember]
+        [MetaProgram.Annotation.MetaMember(Implement = ImplementOptions.Attributes)]
         [DataMember]
         public object AProperty { get; set; }
     }
@@ -24,6 +24,8 @@ namespace AutoPatterns.Tests.Examples
     {
         void IPatternTemplate.Apply(PatternWriterContext context)
         {
+            ExampleDataContract__Apply(context);
+
             foreach (var interfaceType in context.Input.PrimaryInterfaces)
             {
                 foreach (var property in interfaceType.GetTypeInfo().DeclaredProperties)
@@ -34,6 +36,13 @@ namespace AutoPatterns.Tests.Examples
                     }
                 }
             }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void ExampleDataContract__Apply(PatternWriterContext context)
+        {
+            context.Output.ClassWriter.AddClassAttribute(typeof(System.Runtime.Serialization.DataContractAttribute));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

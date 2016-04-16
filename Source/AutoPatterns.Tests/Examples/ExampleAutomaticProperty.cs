@@ -11,8 +11,15 @@ namespace AutoPatterns.Tests.Examples
     [MetaProgram.Annotation.ClassTemplate]
     public partial class ExampleAutomaticProperty
     {
+        [MetaProgram.Annotation.MetaMember, MetaProgram.Annotation.RepeatWith(nameof(AProperty))]
+        private object m_AProperty;
+
         [MetaProgram.Annotation.MetaMember]
-        public object AProperty { get; set; }
+        public object AProperty
+        {
+            get { return m_AProperty; }
+            set { m_AProperty = value; }
+        }
     }
 
     //---------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -183,7 +183,6 @@ namespace AutoPatterns.Runtime
         private string CreateSourceCode(string uniqueAssemblyName, List<MemberDeclarationSyntax> allMembers)
         {
             var sourceSyntaxTree = SyntaxTree(CompilationUnit().WithMembers(List(allMembers)).NormalizeWhitespace(indentation: "\t", eol: "\n"));
-
             var sourceCode = sourceSyntaxTree.ToString();
 
             if (_enableDebug)

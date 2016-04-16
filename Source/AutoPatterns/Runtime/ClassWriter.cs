@@ -15,6 +15,7 @@ namespace AutoPatterns.Runtime
     {
         private readonly PatternWriterContext _context;
         private readonly List<BaseTypeSyntax> _baseTypes = new List<BaseTypeSyntax>();
+        private readonly List<AttributeSyntax> _classAttributes = new List<AttributeSyntax>();
         private readonly List<FieldMember> _fields = new List<FieldMember>();
         private readonly List<ConstructorMember> _constructors = new List<ConstructorMember>();
         private readonly List<MethodMember> _methods = new List<MethodMember>();
@@ -50,6 +51,18 @@ namespace AutoPatterns.Runtime
 
             var syntax = SimpleBaseType(SyntaxHelper.GetTypeSyntax(type));
             _baseTypes.Add(syntax);
+
+            return syntax;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public AttributeSyntax AddClassAttribute(Type attributeType)
+        {
+            _context.Library.EnsureMetadataReference(attributeType);
+
+            var syntax = Attribute(SyntaxHelper.GetTypeSyntax(attributeType));
+            _classAttributes.Add(syntax);
 
             return syntax;
         }
@@ -95,6 +108,7 @@ namespace AutoPatterns.Runtime
         public string NamespaceName { get; private set; }
         public string ClassName { get; private set; }
         public IReadOnlyList<BaseTypeSyntax> BaseTypes => _baseTypes;
+        public IReadOnlyList<AttributeSyntax> ClassAttributes => _classAttributes;
         public IReadOnlyList<FieldMember> Fields => _fields;
         public IReadOnlyList<ConstructorMember> Constructors => _constructors;
         public IReadOnlyList<MethodMember> Methods => _methods;
@@ -132,15 +146,38 @@ namespace AutoPatterns.Runtime
                 .WithMembers(
                     List<MemberDeclarationSyntax>(
                         new MemberDeclarationSyntax[] {
-                            ClassDeclaration(this.ClassName)
-                                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                                .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(this.BaseTypes)))
-                                .WithMembers(List<MemberDeclarationSyntax>(
-                                    this.ConcatAllMemberSyntaxes()
-                                ))
+                            BuildClassDeclarationSyntax()
+                            //ClassDeclaration(this.ClassName)
+                            //    .WithAttributeLists(SingletonList(AttributeList(SeparatedList(_classAttributes))))
+                            //    .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                            //    .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(this.BaseTypes)))
+                            //    .WithMembers(List<MemberDeclarationSyntax>(
+                            //        this.ConcatAllMemberSyntaxes()
+                            //    ))
                         }
                     )
                 );
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private ClassDeclarationSyntax BuildClassDeclarationSyntax()
+        {
+            var syntax = ClassDeclaration(this.ClassName);
+
+            if (_classAttributes.Count > 0)
+            {
+                syntax = syntax.WithAttributeLists(SingletonList(AttributeList(SeparatedList(_classAttributes))));
+            }
+
+            syntax = syntax
+                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(this.BaseTypes)))
+                .WithMembers(List<MemberDeclarationSyntax>(
+                    this.ConcatAllMemberSyntaxes()
+                ));
+
+            return syntax;
         }
 
         //-------------------------------------------------------------------------------------------------------------------------------------------------

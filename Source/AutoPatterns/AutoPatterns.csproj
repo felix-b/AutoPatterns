@@ -102,7 +102,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AspectOption.cs" />
+    <Compile Include="ImplementOptions.cs" />
+    <Compile Include="SelectOptions.cs" />
+    <Compile Include="Runtime\IRuntimeLogger.cs" />
     <Compile Include="OutOfProcess\IRemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\IRemoteCompilerServiceLogger.cs" />
     <Compile Include="OutOfProcess\IServiceHost.cs" />
     <Compile Include="OutOfProcess\RemoteEndpointFactory.cs" />
     <Compile Include="OutOfProcess\WcfRemoteEndpointFactory.cs" />
