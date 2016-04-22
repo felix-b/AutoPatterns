@@ -1,15 +1,15 @@
 ﻿using System;
-using TT = AutoPatterns.MetaProgram.TypeParam;
+using TT = AutoPatterns.MetaProgram.TypeRef;
 
 namespace AutoPatterns.Tests.Examples
 {
     [MetaProgram.Annotation.ClassTemplate]
-    public class ExampleEquatable : TT.IPrimaryContract, IEquatable<TT.IPrimaryContract>
+    public class ExampleEquatable : TT.TPrimaryContract, IEquatable<TT.TPrimaryContract>
     {
         [MetaProgram.Annotation.DeclaredMember]
         public override bool Equals(object obj)
         {
-            TT.IPrimaryContract typedObj = obj as TT.IPrimaryContract;
+            TT.TPrimaryContract typedObj = obj as TT.TPrimaryContract;
 
             if (typedObj != null)
             {
@@ -57,7 +57,7 @@ namespace AutoPatterns.Tests.Examples
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [MetaProgram.Annotation.DeclaredMember]
-        public bool Equals(TT.IPrimaryContract other)
+        public bool Equals(TT.TPrimaryContract other)
         {
             using (MetaProgram.TemplateLogic)
             {

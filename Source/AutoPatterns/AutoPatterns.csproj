@@ -129,8 +129,8 @@
     <Compile Include="MetaProgram.Annotation.cs" />
     <Compile Include="MetaProgram.Constant.cs" />
     <Compile Include="MetaProgram.cs" />
-    <Compile Include="MetaProgram.MetaType.cs" />
-    <Compile Include="MetaProgram.TypeParam.cs" />
+    <Compile Include="MetaProgram.MetaObject.cs" />
+    <Compile Include="MetaProgram.TypeRef.cs" />
     <Compile Include="Runtime\PatternLibrary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime\ReferenceCache.cs" />

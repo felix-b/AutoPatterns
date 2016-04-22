@@ -46,9 +46,9 @@ namespace AutoPatterns
                 AttributeTargets.Field,
                 AllowMultiple = false,
                 Inherited = true)]
-            public class RepeatWithAttribute : Attribute
+            public class IncludeWithAttribute : Attribute
             {
-                public RepeatWithAttribute(string metaMemberName)
+                public IncludeWithAttribute(string metaMemberName)
                 {
                     MetaMemberName = metaMemberName;
                 }

@@ -52,29 +52,54 @@ namespace AutoPatterns.Tests.Examples
                                 .WithArgumentList(
                                     ArgumentList(
                                         SingletonSeparatedList<ArgumentSyntax>(
-                                            Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("HELLO WORLD!"))))))),
-                        ExpressionStatement(
-                            InvocationExpression(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("System"), IdentifierName("Diagnostics")),
-                                        IdentifierName("Debug")),
-                                    IdentifierName("WriteLine")))
-                                .WithArgumentList(
-                                    ArgumentList(
-                                        SingletonSeparatedList<ArgumentSyntax>(
-                                            Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("HELLO DEBUG!"))))))),
-                        ExpressionStatement(
-                            InvocationExpression(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("System"), IdentifierName("Diagnostics")),
-                                        IdentifierName("Debugger")),
-                                    IdentifierName("Launch"))))));
+                                            Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("HELLO WORLD!")))))
+                                )
+                        ),
+                        LocalDeclarationStatement(
+                            VariableDeclaration(
+                                PredefinedType(
+                                    Token(SyntaxKind.ObjectKeyword)
+                                )
+                            )
+                            .WithVariables(
+                                SingletonSeparatedList<VariableDeclaratorSyntax>(
+                                    VariableDeclarator(
+                                        Identifier("obj")
+                                    )
+                                    .WithInitializer(
+                                        EqualsValueClause(
+                                            LiteralExpression(
+                                                SyntaxKind.NullLiteralExpression
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        LocalDeclarationStatement(
+                            VariableDeclaration(
+                                IdentifierName("var")
+                            )
+                            .WithVariables(
+                                SingletonSeparatedList<VariableDeclaratorSyntax>(
+                                    VariableDeclarator(
+                                        Identifier("str")
+                                    )
+                                    .WithInitializer(
+                                        EqualsValueClause(
+                                            InvocationExpression(
+                                                MemberAccessExpression(
+                                                    SyntaxKind.SimpleMemberAccessExpression,
+                                                    IdentifierName("obj"),
+                                                    IdentifierName("ToString")
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ));
         }
     }
 }

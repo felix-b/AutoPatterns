@@ -11,14 +11,14 @@ namespace AutoPatterns.Tests.Examples
     [MetaProgram.Annotation.ClassTemplate]
     public partial class ExampleAutomaticProperty
     {
-        [MetaProgram.Annotation.MetaMember, MetaProgram.Annotation.RepeatWith(nameof(AProperty))]
-        private object m_AProperty;
+        [MetaProgram.Annotation.MetaMember, MetaProgram.Annotation.IncludeWith(nameof(AProperty))]
+        private MetaProgram.TypeRef.TProperty _aProperty;
 
         [MetaProgram.Annotation.MetaMember]
-        public object AProperty
+        public MetaProgram.TypeRef.TProperty AProperty
         {
-            get { return m_AProperty; }
-            set { m_AProperty = value; }
+            get { return _aProperty; }
+            set { _aProperty = value; }
         }
     }
 
@@ -51,15 +51,34 @@ namespace AutoPatterns.Tests.Examples
 
         private void AProperty__Apply(PatternWriterContext context, PropertyInfo declaration)
         {
-            var entry = context.Output.ClassWriter.AddPublicProperty(declaration.Name, declaration.PropertyType, declaration);
-                
-            entry.Syntax = entry.Syntax
-                .WithAccessorList(AccessorList(List<AccessorDeclarationSyntax>(
-                    new[] {
-                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-                    })
-                 ));
+            var backingField = context.Output.ClassWriter.AddPrivateField("_" + declaration.Name.ToCamelCase(), declaration.PropertyType);
+            var property = context.Output.ClassWriter.AddPublicProperty(declaration.Name, declaration.PropertyType, declaration);
+
+            if (property.Getter != null)
+            {
+                property.Getter = property.Getter.WithBody(Block(
+                    SingletonList<StatementSyntax>(
+                        ReturnStatement(
+                            IdentifierName(backingField.Name)
+                        )
+                    )
+                ));
+            }
+
+            if (property.Setter != null)
+            {
+                property.Setter = property.Setter.WithBody(Block(
+                    SingletonList<StatementSyntax>(
+                        ExpressionStatement(
+                            AssignmentExpression(
+                                SyntaxKind.SimpleAssignmentExpression,
+                                IdentifierName(backingField.Name),
+                                IdentifierName("value")
+                            )
+                        )
+                    )
+                ));
+            }
         }
     }
 }

@@ -69,8 +69,40 @@ namespace AutoPatterns.Runtime
 
         //-------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public FieldMember AddPrivateField(string name, Type fieldType)
+        {
+            _context.Library.EnsureMetadataReference(fieldType);
+
+            var syntax = FieldDeclaration(
+                VariableDeclaration(
+                    SyntaxHelper.GetTypeSyntax(fieldType)
+                )
+                .WithVariables(
+                    SingletonSeparatedList<VariableDeclaratorSyntax>(
+                        VariableDeclarator(
+                            Identifier(name)
+                        )
+                    )
+                )
+            )
+            .WithModifiers(
+                TokenList(
+                    Token(SyntaxKind.PrivateKeyword)
+                )
+            );
+
+            var member = new FieldMember(name, syntax, declaration: null);
+            _fields.Add(member);
+            RegisterDeclaration(member);
+            return member;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+
         public PropertyMember AddPublicProperty(string name, Type propertyType, PropertyInfo declaration = null)
         {
+            _context.Library.EnsureMetadataReference(propertyType);
+
             var syntax = PropertyDeclaration(
                 SyntaxHelper.GetTypeSyntax(propertyType), 
                 Identifier(name)
@@ -80,6 +112,7 @@ namespace AutoPatterns.Runtime
             ));
 
             var member = new PropertyMember(name, syntax, declaration);
+
             _properties.Add(member);
             RegisterDeclaration(member);
             return member;
@@ -174,7 +207,7 @@ namespace AutoPatterns.Runtime
                 .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                 .WithBaseList(BaseList(SeparatedList<BaseTypeSyntax>(this.BaseTypes)))
                 .WithMembers(List<MemberDeclarationSyntax>(
-                    this.ConcatAllMemberSyntaxes()
+                    this.ConcatAllCompleteMemberSyntaxes()
                 ));
 
             return syntax;
@@ -182,15 +215,15 @@ namespace AutoPatterns.Runtime
 
         //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private MemberDeclarationSyntax[] ConcatAllMemberSyntaxes()
+        private MemberDeclarationSyntax[] ConcatAllCompleteMemberSyntaxes()
         {
             return
                 Fields.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>()
-                .Concat(Constructors.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>()
-                .Concat(Methods.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>()
-                .Concat(Properties.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>()
-                .Concat(Indexers.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>()
-                .Concat(Events.Select(x => x.Syntax).Cast<MemberDeclarationSyntax>())))))
+                .Concat(Constructors.Select(x => x.GetCompleteSyntax()).Cast<MemberDeclarationSyntax>()
+                .Concat(Methods.Select(x => x.GetCompleteSyntax()).Cast<MemberDeclarationSyntax>()
+                .Concat(Properties.Select(x => x.GetCompleteSyntax()).Cast<MemberDeclarationSyntax>()
+                .Concat(Indexers.Select(x => x.GetCompleteSyntax()).Cast<MemberDeclarationSyntax>()
+                .Concat(Events.Select(x => x.GetCompleteSyntax()).Cast<MemberDeclarationSyntax>())))))
                 .ToArray();
         }
 
@@ -280,6 +313,7 @@ namespace AutoPatterns.Runtime
 
         public interface IMember
         {
+            MemberDeclarationSyntax GetCompleteSyntax();
             string Name { get; }
             MemberDeclarationSyntax Syntax { get; }
             MemberInfo Declaration { get; }
@@ -296,6 +330,13 @@ namespace AutoPatterns.Runtime
                 this.Name = name;
                 this.Syntax = syntax;
                 this.Declaration = declaration;
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public virtual MemberDeclarationSyntax GetCompleteSyntax()
+            {
+                return this.Syntax;
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,6 +388,57 @@ namespace AutoPatterns.Runtime
             public PropertyMember(string name, PropertyDeclarationSyntax syntax, PropertyInfo declaration)
                 : base(name, syntax, declaration)
             {
+                CreateAccessors(declaration.CanRead, declaration.CanWrite);
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public PropertyMember(string name, PropertyDeclarationSyntax syntax, bool canRead, bool canWrite)
+                : base(name, syntax, declaration: null)
+            {
+                CreateAccessors(canRead, canWrite);
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public override MemberDeclarationSyntax GetCompleteSyntax()
+            {
+                AccessorListSyntax accessorList;
+
+                if (Getter != null && Setter != null)
+                {
+                    accessorList = AccessorList(List(new[] { Getter, Setter }));
+                }
+                else if (Getter != null)
+                {
+                    accessorList = AccessorList(List(new[] { Getter }));
+                }
+                else
+                {
+                    accessorList = AccessorList(List(new[] { Setter }));
+                }
+
+                return base.Syntax.WithAccessorList(accessorList);
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public AccessorDeclarationSyntax Getter { get; set; }
+            public AccessorDeclarationSyntax Setter { get; set; }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            private void CreateAccessors(bool canRead, bool canWrite)
+            {
+                if (canRead)
+                {
+                    this.Getter = AccessorDeclaration(SyntaxKind.GetAccessorDeclaration);
+                }
+
+                if (canWrite)
+                {
+                    this.Setter = AccessorDeclaration(SyntaxKind.SetAccessorDeclaration);
+                }
             }
         }
 

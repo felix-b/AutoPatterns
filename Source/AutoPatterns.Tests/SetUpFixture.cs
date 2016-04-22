@@ -11,15 +11,16 @@ namespace AutoPatterns.Tests
     [SetUpFixture]
     public class SetUpFixture
     {
-        private readonly RemoteEndpointFactory _endpointFactory = new TcpRemoteEndpointFactory(tcpPortNumber: 50555);
+        //private readonly RemoteEndpointFactory _endpointFactory = new TcpRemoteEndpointFactory(tcpPortNumber: 50555);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [SetUp]
         public void RunBeforeAnyTests()
         {
-            TestLibrary.UseRemoteCompilerService();
-            _endpointFactory.EnsureCompilerHostIsUp();
+            TestLibrary.UseInProcessCompiler();
+            //TestLibrary.UseRemoteCompilerService();
+            //_endpointFactory.EnsureCompilerHostIsUp();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

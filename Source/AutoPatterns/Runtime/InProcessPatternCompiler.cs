@@ -17,12 +17,6 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public InProcessPatternCompiler()
-        {
-        }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         public bool CompileAssembly(
             string assemblyName,
             string sourceCode,
@@ -98,7 +92,7 @@ namespace AutoPatterns.Runtime
                     if (!result.Success)
                     {
                         IEnumerable<Diagnostic> failures = result.Diagnostics.Where(IsErrorOrWarning);
-                        context.Errors = failures.Select(f => $"{f.Id}: {f.GetMessage()}").ToArray();
+                        context.Errors = failures.Select(f => f.ToString()).ToArray();
                     }
 
                     context.DllBytes = dllStream.ToArray();

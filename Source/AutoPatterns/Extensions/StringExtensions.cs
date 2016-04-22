@@ -27,5 +27,42 @@
                 return str;
             }
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public static string ToCamelCase(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+
+            int firstLowerCaseIndex;
+
+            for (firstLowerCaseIndex = 0 ; firstLowerCaseIndex < str.Length ; firstLowerCaseIndex++)
+            {
+                if (char.IsLower(str[firstLowerCaseIndex]))
+                {
+                    break;
+                }
+            }
+
+            if (firstLowerCaseIndex == 0)
+            {
+                return str;
+            }
+
+            if (firstLowerCaseIndex == 1)
+            {
+                return char.ToLower(str[0]) + str.Substring(1);
+            }
+
+            if (firstLowerCaseIndex >= str.Length)
+            {
+                return str.ToLower();
+            }
+
+            return str.Substring(0, firstLowerCaseIndex - 1).ToLower() + str.Substring(firstLowerCaseIndex - 1);
+        }
     }
 }

@@ -42,5 +42,30 @@ namespace AutoPatterns.Tests.Extensions
 
             actualOutput.ShouldBe(expectedOutput);
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [TestCase("PascalCase", "pascalCase")]
+        [TestCase("APascalCase", "aPascalCase")]
+        [TestCase("DbPascalCase", "dbPascalCase")]
+        [TestCase("UIPascalCase", "uiPascalCase")]
+        [TestCase("HTMLPascalCase", "htmlPascalCase")]
+        [TestCase("HTML", "html")]
+        [TestCase("DB", "db")]
+        [TestCase("Db", "db")]
+        [TestCase("X", "x")]
+        [TestCase("x", "x")]
+        [TestCase("", "")]
+        [TestCase(null, null)]
+        public void TestToCamelCase(string input, string expectedOutput)
+        {
+            //-- act
+
+            var actualOutput = input.ToCamelCase();
+
+            //-- assert
+
+            actualOutput.ShouldBe(expectedOutput);
+        }
     }
 }
