@@ -10,7 +10,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace AutoPatterns.Tests.Examples
 {
     [MetaProgram.Annotation.ClassTemplate]
-    [DataContract(Name = MetaProgram.Constant.String1, Namespace = MetaProgram.Constant.String2)]
+    [DataContract(Namespace = "test.com")]
     public partial class ExampleDataContract
     {
         [MetaProgram.Annotation.MetaMember(Implement = ImplementOptions.Attributes)]
@@ -42,7 +42,27 @@ namespace AutoPatterns.Tests.Examples
 
         private void ExampleDataContract__Apply(PatternWriterContext context)
         {
-            context.Output.ClassWriter.AddClassAttribute(typeof(System.Runtime.Serialization.DataContractAttribute));
+            context.Output.ClassWriter.AddClassAttribute(
+                typeof(System.Runtime.Serialization.DataContractAttribute), 
+                attr => attr
+                    .WithArgumentList(
+                        AttributeArgumentList(
+                            SingletonSeparatedList<AttributeArgumentSyntax>(
+                                AttributeArgument(
+                                    LiteralExpression(
+                                        SyntaxKind.StringLiteralExpression,
+                                        Literal("test.com")
+                                    )
+                                )
+                                .WithNameEquals(
+                                    NameEquals(
+                                        IdentifierName(nameof(System.Runtime.Serialization.DataContractAttribute.Namespace))
+                                    )
+                                )
+                            )
+                        )
+                    )
+            );
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,7 +83,9 @@ namespace AutoPatterns.Tests.Examples
                 context.Library.EnsureMetadataReference(typeof(System.Runtime.Serialization.DataMemberAttribute));
                 property.Syntax = property.Syntax.WithAttributeLists(
                     property.Syntax.AttributeLists.Add(AttributeList(SeparatedList<AttributeSyntax>(new AttributeSyntax[] {
-                        Attribute(SyntaxHelper.GetTypeSyntax(typeof(System.Runtime.Serialization.DataMemberAttribute)))    
+                        Attribute(
+                            SyntaxHelper.GetTypeSyntax(typeof(System.Runtime.Serialization.DataMemberAttribute))
+                        )
                     }))));
             }
         }

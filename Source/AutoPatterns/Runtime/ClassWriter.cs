@@ -57,13 +57,17 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AttributeSyntax AddClassAttribute(Type attributeType)
+        public AttributeSyntax AddClassAttribute(Type attributeType, Func<AttributeSyntax, AttributeSyntax> appendSyntax = null)
         {
             _context.Library.EnsureMetadataReference(attributeType);
-
             var syntax = Attribute(SyntaxHelper.GetTypeSyntax(attributeType));
-            _classAttributes.Add(syntax);
 
+            if (appendSyntax != null)
+            {
+                syntax = appendSyntax(syntax);
+            }
+
+            _classAttributes.Add(syntax);
             return syntax;
         }
 

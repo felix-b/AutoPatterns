@@ -48,7 +48,7 @@ namespace AutoPatterns.Tests.Examples
         {
             //-- arrange
 
-            var library = TestLibrary.CreateLibrary(assemblyName: this.GetType().Name);
+            var library = TestLibrary.CreateLibraryWithDebug(assemblyName: this.GetType().Name);
             var pattern = new TestPattern(library, pipeline => {
                 pipeline.InsertLast(new ExampleAutomaticProperty());
                 pipeline.InsertLast(new ExampleDataContract());
@@ -70,6 +70,14 @@ namespace AutoPatterns.Tests.Examples
             obj.StringValue.ShouldBe("ABC");
             obj.EnumValue.ShouldBe(DayOfWeek.Thursday);
             obj.TimeSpanValue.ShouldBe(TimeSpan.FromSeconds(123));
+
+            var dataContractAttribute = obj.GetType().GetCustomAttribute<DataContractAttribute>();
+            dataContractAttribute.ShouldNotBeNull();
+            dataContractAttribute.Namespace.ShouldBe("test.com");
+
+            var dataMemberDecls = typeof(ExampleAncestors.IScalarProperties).GetProperties();
+            var dataMemberImpls = dataMemberDecls.Select(decl => obj.GetType().GetProperty(decl.Name)).ToArray();
+            dataMemberImpls.ShouldAllBe(impl => impl.IsDefined(typeof(DataMemberAttribute)));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
