@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using AutoPatterns.Abstractions;
+using AutoPatterns.DesignTime;
 using AutoPatterns.Extensions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis.CSharp;

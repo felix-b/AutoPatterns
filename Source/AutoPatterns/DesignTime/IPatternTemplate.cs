@@ -1,6 +1,6 @@
 ﻿using AutoPatterns.Runtime;
 
-namespace AutoPatterns.Abstractions
+namespace AutoPatterns.DesignTime
 {
     public interface IPatternTemplate
     {

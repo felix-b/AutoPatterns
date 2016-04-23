@@ -103,6 +103,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AspectOption.cs" />
+    <Compile Include="DesignTime\TemplateDiagnosticAnalyzer.cs" />
+    <Compile Include="DesignTime\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="DesignTime\TemplateCodeFixProvider.cs" />
     <Compile Include="ImplementOptions.cs" />
     <Compile Include="SelectOptions.cs" />
     <Compile Include="Runtime\IRuntimeLogger.cs" />
@@ -114,13 +121,12 @@
     <Compile Include="OutOfProcess\RemoteCompilerService.cs" />
     <Compile Include="OutOfProcess\RemotePatternCompiler.cs" />
     <Compile Include="OutOfProcess\TcpRemoteEndpointFactory.cs" />
-    <Compile Include="Preprocessing\IPatternTemplate.cs" />
+    <Compile Include="DesignTime\IPatternTemplate.cs" />
     <Compile Include="Runtime\ClassWriter.cs" />
     <Compile Include="Runtime\InProcessPatternCompiler.cs" />
     <Compile Include="Runtime\IPatternCompiler.cs" />
     <Compile Include="Runtime\PatternWriter.cs" />
     <Compile Include="Runtime\PatternFactory.cs" />
-    <Compile Include="Preprocessing\TemplateMemberMatcher.cs" />
     <Compile Include="AutoPattern.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
@@ -142,6 +148,12 @@
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DesignTime\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

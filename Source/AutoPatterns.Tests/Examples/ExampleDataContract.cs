@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.Serialization;
-using AutoPatterns.Abstractions;
+using AutoPatterns.DesignTime;
 using AutoPatterns.Extensions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis.CSharp;
