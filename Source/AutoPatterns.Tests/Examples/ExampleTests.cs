@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using AutoPatterns.Runtime;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using NUnit.Framework;
 using Shouldly;
 
