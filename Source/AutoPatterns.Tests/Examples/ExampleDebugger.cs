@@ -18,7 +18,7 @@ namespace AutoPatterns.Tests.Examples
         [MetaProgram.Annotation.NewMember]
         public void TryDebugging()
         {
-            Console.WriteLine("HELLO WORLD!");
+            TestLibrary.Platform.ConsoleWriteLine("HELLO WORLD!");
             System.Diagnostics.Debug.WriteLine("HELLO DEBUG!");
             System.Diagnostics.Debugger.Launch();
         }
@@ -31,7 +31,10 @@ namespace AutoPatterns.Tests.Examples
         void IPatternTemplate.Apply(PatternWriterContext context)
         {
             context.Output.ClassWriter.AddBaseType(typeof(ExampleAncestors.ITryDebugging));
-            TryDebugging__Apply(context, typeof(ExampleAncestors.ITryDebugging).GetMethod(nameof(ExampleAncestors.ITryDebugging.TryDebugging)));
+
+            TryDebugging__Apply(
+                context, 
+                typeof(ExampleAncestors.ITryDebugging).GetTypeInfo().GetDeclaredMethod(nameof(ExampleAncestors.ITryDebugging.TryDebugging)));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

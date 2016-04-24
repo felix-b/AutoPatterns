@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using TT = AutoPatterns.MetaProgram.TypeRef;
 
 namespace AutoPatterns.Tests.Examples
@@ -31,7 +32,7 @@ namespace AutoPatterns.Tests.Examples
             {
                 foreach (var field in MetaProgram.ThisObject.Fields)
                 {
-                    if (field.Info.FieldType.IsValueType)
+                    if (field.Info.FieldType.GetTypeInfo().IsValueType)
                     {
                         using (MetaProgram.TemplateOutput)
                         {

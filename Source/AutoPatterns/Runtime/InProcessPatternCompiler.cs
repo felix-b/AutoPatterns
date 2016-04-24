@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace AutoPatterns.Runtime
 {
-    internal class InProcessPatternCompiler : IPatternCompiler
+    public class InProcessPatternCompiler : IPatternCompiler
     {
         private readonly ReferenceCache _referenceCache = new ReferenceCache();
 

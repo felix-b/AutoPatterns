@@ -15,6 +15,7 @@ namespace AutoPatterns.Runtime
 {
     public class PatternLibrary
     {
+        private readonly IAutoPatternsPlatform _platform;
         private readonly IPatternCompiler _compiler;
         private readonly bool _enableDebug;
         private readonly string _assemblyName;
@@ -26,47 +27,54 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(string assemblyName)
-            : this(new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false)
+        public PatternLibrary(IAutoPatternsPlatform platform, string assemblyName)
+            : this(platform, new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(string assemblyName, params Assembly[] preloadedAssemblies)
-            : this(new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
+        public PatternLibrary(IAutoPatternsPlatform platform, string assemblyName, params Assembly[] preloadedAssemblies)
+            : this(platform, new InProcessPatternCompiler(), assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(IPatternCompiler compiler, string assemblyName)
-            : this(compiler, assemblyName, assemblyDirectory: null, enableDebug: false)
+        public PatternLibrary(IAutoPatternsPlatform platform, IPatternCompiler compiler, string assemblyName)
+            : this(platform, compiler, assemblyName, assemblyDirectory: null, enableDebug: false)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(IPatternCompiler compiler, string assemblyName, params Assembly[] preloadedAssemblies)
-            : this(compiler, assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
+        public PatternLibrary(IAutoPatternsPlatform platform, IPatternCompiler compiler, string assemblyName, params Assembly[] preloadedAssemblies)
+            : this(platform, compiler, assemblyName, assemblyDirectory: null, enableDebug: false, preloadedAssemblies: preloadedAssemblies)
         {
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public PatternLibrary(IPatternCompiler compiler, string assemblyName, string assemblyDirectory, bool enableDebug, params Assembly[] preloadedAssemblies)
+        public PatternLibrary(
+            IAutoPatternsPlatform platform, 
+            IPatternCompiler compiler, 
+            string assemblyName, 
+            string assemblyDirectory, 
+            bool enableDebug, 
+            params Assembly[] preloadedAssemblies)
         {
+            _platform = platform;
             _compiler = compiler;
             _enableDebug = enableDebug;
             _assemblyName = assemblyName;
             _assemblyDirectory = assemblyDirectory;
-            _referencePaths = ImmutableHashSet.Create<string>(StringComparer.InvariantCultureIgnoreCase);
+            _referencePaths = ImmutableHashSet.Create<string>(StringComparer.OrdinalIgnoreCase, GetSystemAssemblyReferences());
             _writers = ImmutableArray.Create<PatternWriter>();
             _assemblies = ImmutableArray.Create<Assembly>(preloadedAssemblies);
 
             if (!string.IsNullOrEmpty(assemblyDirectory))
             {
-                Directory.CreateDirectory(assemblyDirectory);
+                _platform.DirectoryCreateDirectory(assemblyDirectory);
             }
         }
 
@@ -91,6 +99,7 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public IAutoPatternsPlatform Platform => _platform;
         public ImmutableArray<PatternWriter> Writers => _writers;
         public ImmutableArray<Assembly> Assemblies => _assemblies;
 
@@ -110,7 +119,7 @@ namespace AutoPatterns.Runtime
         {
             lock (_syncRoot)
             {
-                _referencePaths = _referencePaths.Add(assembly.Location);
+                _referencePaths = _referencePaths.Add(_platform.AssemblyLocation(assembly));
             }
         }
 
@@ -120,8 +129,20 @@ namespace AutoPatterns.Runtime
         {
             lock (_syncRoot)
             {
-                _referencePaths = _referencePaths.Add(type.Assembly.Location);
+                _referencePaths = _referencePaths.Add(_platform.AssemblyLocation(type.GetTypeInfo().Assembly));
             }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private string[] GetSystemAssemblyReferences()
+        {
+            var systemAssemblyFolder = Path.GetDirectoryName(_platform.AssemblyLocation(typeof(object).GetTypeInfo().Assembly));
+
+             return new[] {
+                 Path.Combine(systemAssemblyFolder, "mscorlib.dll"),
+                 Path.Combine(systemAssemblyFolder, "System.Runtime.dll")
+            };
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,13 +156,13 @@ namespace AutoPatterns.Runtime
             {
                 if (_enableDebug)
                 {
-                    File.WriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"), dllBytes);
-                    File.WriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".pdb"), pdbBytes);
-                    compiledAssembly = Assembly.LoadFrom(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"));
+                    _platform.FileWriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"), dllBytes);
+                    _platform.FileWriteAllBytes(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".pdb"), pdbBytes);
+                    compiledAssembly = _platform.AssemblyLoadFrom(Path.Combine(_assemblyDirectory, uniqueAssemblyName + ".dll"));
                 }
                 else
                 {
-                    compiledAssembly = Assembly.Load(dllBytes);
+                    compiledAssembly = _platform.AssemblyLoad(dllBytes);
                 }
 
                 return true;
@@ -161,15 +182,15 @@ namespace AutoPatterns.Runtime
 
             if (ListMembersToCompile(out allMembers))
             {
-                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 1 >> {clock.ElapsedMilliseconds} ms");
+                _platform.ConsoleWriteLine($"PERF >> PatternLibrary::CompileAssembly # 1 >> {clock.ElapsedMilliseconds} ms");
 
                 var sourceCode = CreateSourceCode(uniqueAssemblyName, allMembers);
 
-                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 2 >> {clock.ElapsedMilliseconds} ms");
+                _platform.ConsoleWriteLine($"PERF >> PatternLibrary::CompileAssembly # 2 >> {clock.ElapsedMilliseconds} ms");
 
                 CompileOrThrow(uniqueAssemblyName, out dllBytes, out pdbBytes, sourceCode);
 
-                Console.WriteLine($"PERF >> PatternLibrary::CompileAssembly # 3 >> {clock.ElapsedMilliseconds} ms");
+                _platform.ConsoleWriteLine($"PERF >> PatternLibrary::CompileAssembly # 3 >> {clock.ElapsedMilliseconds} ms");
                 return true;
             }
 
@@ -188,7 +209,7 @@ namespace AutoPatterns.Runtime
             if (_enableDebug)
             {
                 var sourceFilePath = Path.Combine(_assemblyDirectory,  uniqueAssemblyName + ".cs");
-                File.WriteAllText(sourceFilePath, sourceCode);
+                _platform.FileWriteAllText(sourceFilePath, sourceCode);
                 sourceCode = $"#line 1 \"{sourceFilePath}\"{Environment.NewLine}" + sourceCode;
             }
             return sourceCode;

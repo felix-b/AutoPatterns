@@ -1,35 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoPatterns.Extensions;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Rename;
-using Microsoft.CodeAnalysis.Text;
 
 namespace AutoPatterns.DesignTime
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TemplateCodeFixProvider)), Shared]
-    public class TemplateCodeFixProvider : CodeFixProvider
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(PatternTemplateCodeFixProvider)), Shared]
+    public class PatternTemplateCodeFixProvider : CodeFixProvider
     {
-        private const string title = "Make uppercase";
-
-        public sealed override ImmutableArray<string> FixableDiagnosticIds
-        {
-            get { return ImmutableArray.Create(TemplateDiagnosticAnalyzer.DiagnosticId); }
-        }
-
         public sealed override FixAllProvider GetFixAllProvider()
         {
             // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
             return WellKnownFixAllProviders.BatchFixer;
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
@@ -45,17 +38,23 @@ namespace AutoPatterns.DesignTime
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    title: title,
-                    createChangedSolution: c => MakeUppercaseAsync(context.Document, declaration, c),
-                    equivalenceKey: title),
+                    title: _s_codeFixTitle,
+                    createChangedSolution: c => ProProcessTemplate(context.Document, declaration, c),
+                    equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
 
-        private async Task<Solution> MakeUppercaseAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(PatternTemplateDiagnosticAnalyzer.DiagnosticId);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private async Task<Solution> ProProcessTemplate(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
         {
             // Compute new uppercase name.
             var identifierToken = typeDecl.Identifier;
-            var newName = identifierToken.Text.ToUpperInvariant();
+            var newName = identifierToken.Text.ToCamelCase();
 
             // Get the symbol representing the type to be renamed.
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
@@ -69,5 +68,9 @@ namespace AutoPatterns.DesignTime
             // Return the new solution with the now-uppercase type name.
             return newSolution;
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly string _s_codeFixTitle = "Preprocess this template";
     }
 }

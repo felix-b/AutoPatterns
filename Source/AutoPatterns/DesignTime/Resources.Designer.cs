@@ -10,6 +10,7 @@
 
 namespace AutoPatterns.DesignTime {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace AutoPatterns.DesignTime {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AutoPatterns.DesignTime.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AutoPatterns.DesignTime.Resources", typeof(Resources).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +62,7 @@ namespace AutoPatterns.DesignTime {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type names should be all uppercase..
+        ///   Looks up a localized string similar to Ensure preprocessing of AutoPatterns template..
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -70,7 +71,7 @@ namespace AutoPatterns.DesignTime {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type name &apos;{0}&apos; contains lowercase letters.
+        ///   Looks up a localized string similar to Template &apos;{0}&apos; was not preprocessed..
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {
@@ -79,7 +80,7 @@ namespace AutoPatterns.DesignTime {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type names should be all uppercase..
+        ///   Looks up a localized string similar to AutoPatterns Template Preprocessor.
         /// </summary>
         internal static string AnalyzerTitle {
             get {

@@ -277,7 +277,7 @@ namespace AutoPatterns.Tests.Runtime
 
             var compilation = CSharpCompilation
                 .Create("MyTest", options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(TestLibrary.Platform.AssemblyLocation(typeof(object).GetTypeInfo().Assembly)))
                 .AddSyntaxTrees(syntaxTree);
 
             Assembly generatedAssembly;
@@ -298,10 +298,10 @@ namespace AutoPatterns.Tests.Runtime
                         string.Join(System.Environment.NewLine, failures.Select(f => $"{f.Id}: {f.GetMessage()}")));
                 }
 
-                generatedAssembly = Assembly.Load(output.ToArray());
+                generatedAssembly = TestLibrary.Platform.AssemblyLoad(output.ToArray());
             }
 
-            var library = new PatternLibrary(assemblyName: "NotUsed", preloadedAssemblies: generatedAssembly);
+            var library = new PatternLibrary(TestLibrary.Platform, assemblyName: "NotUsed", preloadedAssemblies: generatedAssembly);
             var factory = new TestPatternTwo(library);
 
             //-- act
@@ -311,7 +311,7 @@ namespace AutoPatterns.Tests.Runtime
             //-- assert
 
             obj.ShouldNotBeNull();
-            obj.GetType().Assembly.ShouldBeSameAs(generatedAssembly);
+            obj.GetType().GetTypeInfo().Assembly.ShouldBeSameAs(generatedAssembly);
             obj.GetType().FullName.ShouldBe("MyNamespace.MyClass");
 
             dynamic dyn = obj;
@@ -323,7 +323,7 @@ namespace AutoPatterns.Tests.Runtime
 
         private PatternLibrary CreateTestLibrary()
         {
-            return new PatternLibrary(this.GetType().Name, Assembly.GetExecutingAssembly());
+            return new PatternLibrary(TestLibrary.Platform, this.GetType().Name, this.GetType().GetTypeInfo().Assembly);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -413,7 +413,7 @@ namespace AutoPatterns.Tests.Runtime
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected internal override void OnTypeBound(PatternFactory.TypeEntry entry)
+            protected override void OnTypeBound(PatternFactory.TypeEntry entry)
             {
                 _typeEntryLog.Add(entry.Type);
             }

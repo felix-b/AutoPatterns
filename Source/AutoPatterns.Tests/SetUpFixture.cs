@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AutoPatterns.OutOfProcess;
+//using AutoPatterns.OutOfProcess;
 using NUnit.Framework;
 
 namespace AutoPatterns.Tests

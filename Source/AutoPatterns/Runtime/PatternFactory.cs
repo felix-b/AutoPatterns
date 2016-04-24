@@ -115,7 +115,7 @@ namespace AutoPatterns.Runtime
                     if (!_typeEntryByKey.TryGetValue(key, out entry))
                     {
                         var type = GetTypeFromLibraryOrThrow(key);
-                        entry = new TypeEntry(key, type.GetTypeInfo());
+                        entry = new TypeEntry(key, type);
                         _typeEntryByKey = _typeEntryByKey.Add(key, entry);
                         _ownerPattern.OnTypeBound(entry);
                     }
@@ -176,17 +176,17 @@ namespace AutoPatterns.Runtime
 
         public class TypeEntry
         {
-            internal TypeEntry(TypeKey key, TypeInfo type)
+            internal TypeEntry(TypeKey key, Type type)
             {
                 this.Key = key;
                 this.Type = type;
-                this.FactoryMethods = DiscoverFactoryMethods(type);
+                this.FactoryMethods = DiscoverFactoryMethods(type.GetTypeInfo());
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
             public TypeKey Key { get; private set; }
-            public TypeInfo Type { get; private set; }
+            public Type Type { get; private set; }
             public IReadOnlyList<Delegate> FactoryMethods { get; private set; }
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------

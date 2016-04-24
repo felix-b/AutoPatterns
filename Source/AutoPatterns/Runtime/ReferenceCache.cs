@@ -13,7 +13,7 @@ namespace AutoPatterns.Runtime
     {
         private readonly object _syncRoot = new object();
         private ImmutableDictionary<string, MetadataReference> _referenceByAssemblyName = 
-            ImmutableDictionary.Create<string, MetadataReference>(StringComparer.InvariantCultureIgnoreCase);
+            ImmutableDictionary.Create<string, MetadataReference>(StringComparer.OrdinalIgnoreCase);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 

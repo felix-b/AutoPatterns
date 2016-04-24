@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AutoPatterns.Extensions
 {
-    internal static class SyntaxHelper
+    public static class SyntaxHelper
     {
         public static ArgumentListSyntax CopyParametersToArguments(ParameterListSyntax parameters)
         {

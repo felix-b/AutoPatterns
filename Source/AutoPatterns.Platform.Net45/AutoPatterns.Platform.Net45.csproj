@@ -4,17 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6EED7C67-9FBA-4193-97A4-AE07EE9AD2C7}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{88E56EB0-FAAC-4FF4-BB28-55957DE889DA}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AutoPatterns.CompilerHost</RootNamespace>
-    <AssemblyName>AutoPatterns.CompilerHost</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <RootNamespace>AutoPatterns</RootNamespace>
+    <AssemblyName>AutoPatterns.Platform.Net45</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,9 +22,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\Bin\</OutputPath>
@@ -33,10 +32,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -46,15 +47,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Net45AutoPatternsPlatform.cs" />
+    <Compile Include="OutOfProcess\IRemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\IRemoteCompilerServiceLogger.cs" />
+    <Compile Include="OutOfProcess\IServiceHost.cs" />
+    <Compile Include="OutOfProcess\RemoteCompilerService.cs" />
+    <Compile Include="OutOfProcess\RemoteEndpointFactory.cs" />
+    <Compile Include="OutOfProcess\RemotePatternCompiler.cs" />
+    <Compile Include="OutOfProcess\TcpRemoteEndpointFactory.cs" />
+    <Compile Include="OutOfProcess\WcfRemoteEndpointFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\AutoPatterns\AutoPatterns.csproj">
-      <Project>{bf666f2e-7907-4e3b-901f-eb88d4728005}</Project>
+      <Project>{92308bdf-3a98-4f5d-bc34-69cad3b231bd}</Project>
       <Name>AutoPatterns</Name>
     </ProjectReference>
   </ItemGroup>

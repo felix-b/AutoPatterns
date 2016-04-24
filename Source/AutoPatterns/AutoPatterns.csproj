@@ -2,16 +2,17 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BF666F2E-7907-4E3B-901F-EB88D4728005}</ProjectGuid>
+    <ProjectGuid>{92308BDF-3A98-4F5D-BC34-69CAD3B231BD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AutoPatterns</RootNamespace>
     <AssemblyName>AutoPatterns</AssemblyName>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,8 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>..\Bin\AutoPatterns.XML</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,6 +34,53 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AspectOption.cs" />
+    <Compile Include="AutoPattern.cs" />
+    <Compile Include="DesignTime\IPatternTemplate.cs" />
+    <Compile Include="DesignTime\PatternTemplateCodeFixProvider.cs" />
+    <Compile Include="DesignTime\PatternTemplateDiagnosticAnalyzer.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\SyntaxHelper.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="ImplementOptions.cs" />
+    <Compile Include="MetaProgram.Annotation.cs" />
+    <Compile Include="MetaProgram.Constant.cs" />
+    <Compile Include="MetaProgram.cs" />
+    <Compile Include="MetaProgram.MetaObject.cs" />
+    <Compile Include="MetaProgram.TypeRef.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DesignTime\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Runtime\ClassWriter.cs" />
+    <Compile Include="Runtime\InProcessPatternCompiler.cs" />
+    <Compile Include="Runtime\IPatternCompiler.cs" />
+    <Compile Include="Runtime\IAutoPatternsPlatform.cs" />
+    <Compile Include="Runtime\IRuntimeLogger.cs" />
+    <Compile Include="Runtime\PatternFactory.cs" />
+    <Compile Include="Runtime\PatternLibrary.cs" />
+    <Compile Include="Runtime\PatternWriter.cs" />
+    <Compile Include="Runtime\PatternWriterContext.cs" />
+    <Compile Include="Runtime\ReferenceCache.cs" />
+    <Compile Include="Runtime\TypeKey.cs" />
+    <Compile Include="SelectOptions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DesignTime\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.1.0.0\lib\portable-net45+win8\Microsoft.CodeAnalysis.dll</HintPath>
@@ -79,72 +126,8 @@
       <HintPath>..\packages\System.Reflection.Metadata.1.0.21\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AspectOption.cs" />
-    <Compile Include="DesignTime\TemplateDiagnosticAnalyzer.cs" />
-    <Compile Include="DesignTime\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="DesignTime\TemplateCodeFixProvider.cs" />
-    <Compile Include="ImplementOptions.cs" />
-    <Compile Include="SelectOptions.cs" />
-    <Compile Include="Runtime\IRuntimeLogger.cs" />
-    <Compile Include="OutOfProcess\IRemoteCompilerService.cs" />
-    <Compile Include="OutOfProcess\IRemoteCompilerServiceLogger.cs" />
-    <Compile Include="OutOfProcess\IServiceHost.cs" />
-    <Compile Include="OutOfProcess\RemoteEndpointFactory.cs" />
-    <Compile Include="OutOfProcess\WcfRemoteEndpointFactory.cs" />
-    <Compile Include="OutOfProcess\RemoteCompilerService.cs" />
-    <Compile Include="OutOfProcess\RemotePatternCompiler.cs" />
-    <Compile Include="OutOfProcess\TcpRemoteEndpointFactory.cs" />
-    <Compile Include="DesignTime\IPatternTemplate.cs" />
-    <Compile Include="Runtime\ClassWriter.cs" />
-    <Compile Include="Runtime\InProcessPatternCompiler.cs" />
-    <Compile Include="Runtime\IPatternCompiler.cs" />
-    <Compile Include="Runtime\PatternWriter.cs" />
-    <Compile Include="Runtime\PatternFactory.cs" />
-    <Compile Include="AutoPattern.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Extensions\SyntaxHelper.cs" />
-    <Compile Include="Runtime\PatternWriterContext.cs" />
-    <Compile Include="MetaProgram.Annotation.cs" />
-    <Compile Include="MetaProgram.Constant.cs" />
-    <Compile Include="MetaProgram.cs" />
-    <Compile Include="MetaProgram.MetaObject.cs" />
-    <Compile Include="MetaProgram.TypeRef.cs" />
-    <Compile Include="Runtime\PatternLibrary.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\ReferenceCache.cs" />
-    <Compile Include="Runtime\TypeKey.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="DesignTime\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\v4.6\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

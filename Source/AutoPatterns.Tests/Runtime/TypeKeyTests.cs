@@ -15,9 +15,9 @@ namespace AutoPatterns.Tests.Runtime
             //-- arrange & act
 
             TypeKey key1 = new TypeKey<Type>(typeof(IDisposable));
-            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
-            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
-            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
 
             //-- assert
 
@@ -26,22 +26,22 @@ namespace AutoPatterns.Tests.Runtime
             key1.ToString().ShouldBe("System_IDisposable");
 
             key2.Count.ShouldBe(2);
-            key2[0].ShouldBe(typeof(FileStream));
+            key2[0].ShouldBe(typeof(Stream));
             key2[1].ShouldBe(typeof(IDisposable));
-            key2.ToString().ShouldBe("System_IO_FileStream_System_IDisposable");
+            key2.ToString().ShouldBe("System_IO_Stream_System_IDisposable");
 
             key3.Count.ShouldBe(3);
-            key3[0].ShouldBe(typeof(FileStream));
+            key3[0].ShouldBe(typeof(Stream));
             key3[1].ShouldBe(typeof(IDisposable));
             key3[2].ShouldBe(123);
-            key3.ToString().ShouldBe("System_IO_FileStream_System_IDisposable_123");
+            key3.ToString().ShouldBe("System_IO_Stream_System_IDisposable_123");
 
             key4.Count.ShouldBe(4);
-            key4[0].ShouldBe(typeof(FileStream));
+            key4[0].ShouldBe(typeof(Stream));
             key4[1].ShouldBe(typeof(IDisposable));
             key4[2].ShouldBe(123);
             key4[3].ShouldBe("ABC");
-            key4.ToString().ShouldBe("System_IO_FileStream_System_IDisposable_123_ABC");
+            key4.ToString().ShouldBe("System_IO_Stream_System_IDisposable_123_ABC");
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,23 +55,23 @@ namespace AutoPatterns.Tests.Runtime
             TypeKey key1B = new TypeKey<Type>(typeof(IDisposable));
             TypeKey key1C = new TypeKey<Type>(typeof(IFormattable));
 
-            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
-            TypeKey key2B = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
+            TypeKey key2B = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
             TypeKey key2C = new TypeKey<Type, Type>(typeof(MemoryStream), typeof(IDisposable));
-            TypeKey key2D = new TypeKey<Type, Type>(typeof(FileStream), typeof(IFormattable));
+            TypeKey key2D = new TypeKey<Type, Type>(typeof(Stream), typeof(IFormattable));
 
-            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
-            TypeKey key3B = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
+            TypeKey key3B = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
             TypeKey key3C = new TypeKey<Type, Type, int>(typeof(MemoryStream), typeof(IDisposable), 123);
-            TypeKey key3D = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IFormattable), 123);
-            TypeKey key3E = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 456);
+            TypeKey key3D = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IFormattable), 123);
+            TypeKey key3E = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 456);
 
-            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
-            TypeKey key4B = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
+            TypeKey key4B = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
             TypeKey key4C = new TypeKey<Type, Type, int, string>(typeof(MemoryStream), typeof(IDisposable), 123, "ABC");
-            TypeKey key4D = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IFormattable), 123, "ABC");
-            TypeKey key4E = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 456, "ABC");
-            TypeKey key4F = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "DEF");
+            TypeKey key4D = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IFormattable), 123, "ABC");
+            TypeKey key4E = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 456, "ABC");
+            TypeKey key4F = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "DEF");
 
             //-- act
 
@@ -98,14 +98,14 @@ namespace AutoPatterns.Tests.Runtime
             TypeKey key1 = new TypeKey<Type>(typeof(IDisposable));
             TypeKey key1B = new TypeKey<Type>(typeof(IDisposable));
 
-            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
-            TypeKey key2B = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
+            TypeKey key2B = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
 
-            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
-            TypeKey key3B = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
+            TypeKey key3B = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
 
-            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
-            TypeKey key4B = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
+            TypeKey key4B = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
 
             //-- act
 
@@ -130,9 +130,9 @@ namespace AutoPatterns.Tests.Runtime
             //-- arrange
 
             TypeKey key1 = new TypeKey<Type>(typeof(IDisposable));
-            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
-            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
-            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
 
             //-- act
 
@@ -160,10 +160,10 @@ namespace AutoPatterns.Tests.Runtime
         {
             //-- arrange
 
-            TypeKey key1 = new TypeKey<Type>(typeof(FileStream));
-            TypeKey key2 = new TypeKey<Type, Type>(typeof(FileStream), typeof(IDisposable));
-            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(FileStream), typeof(IDisposable), 123);
-            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(FileStream), typeof(IDisposable), 123, "ABC");
+            TypeKey key1 = new TypeKey<Type>(typeof(Stream));
+            TypeKey key2 = new TypeKey<Type, Type>(typeof(Stream), typeof(IDisposable));
+            TypeKey key3 = new TypeKey<Type, Type, int>(typeof(Stream), typeof(IDisposable), 123);
+            TypeKey key4 = new TypeKey<Type, Type, int, string>(typeof(Stream), typeof(IDisposable), 123, "ABC");
 
             //-- act && assert
 

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AutoPatterns.OutOfProcess")]
+[assembly: AssemblyTitle("AutoPatterns.Platform.Net45")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("AutoPatterns.OutOfProcess")]
+[assembly: AssemblyProduct("AutoPatterns.Platform.Net45")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a9fce936-45f9-4621-a0fd-75cd389faf7b")]
+[assembly: Guid("88e56eb0-faac-4ff4-bb28-55957de889da")]
 
 // Version information for an assembly consists of the following four values:
 //

@@ -70,12 +70,12 @@ namespace AutoPatterns.Tests.Examples
             obj.EnumValue.ShouldBe(DayOfWeek.Thursday);
             obj.TimeSpanValue.ShouldBe(TimeSpan.FromSeconds(123));
 
-            var dataContractAttribute = obj.GetType().GetCustomAttribute<DataContractAttribute>();
+            var dataContractAttribute = obj.GetType().GetTypeInfo().GetCustomAttribute<DataContractAttribute>();
             dataContractAttribute.ShouldNotBeNull();
             dataContractAttribute.Namespace.ShouldBe("test.com");
 
-            var dataMemberDecls = typeof(ExampleAncestors.IScalarProperties).GetProperties();
-            var dataMemberImpls = dataMemberDecls.Select(decl => obj.GetType().GetProperty(decl.Name)).ToArray();
+            var dataMemberDecls = typeof(ExampleAncestors.IScalarProperties).GetTypeInfo().DeclaredProperties;
+            var dataMemberImpls = dataMemberDecls.Select(decl => obj.GetType().GetTypeInfo().GetDeclaredProperty(decl.Name)).ToArray();
             dataMemberImpls.ShouldAllBe(impl => impl.IsDefined(typeof(DataMemberAttribute)));
         }
 
@@ -103,6 +103,7 @@ namespace AutoPatterns.Tests.Examples
             //-- arrange
 
             var library = new PatternLibrary(
+                TestLibrary.Platform,
                 new InProcessPatternCompiler(), 
                 assemblyName: this.GetType().Name, 
                 assemblyDirectory: @"C:\Temp\TryDebugging", 
@@ -144,7 +145,7 @@ namespace AutoPatterns.Tests.Examples
 
         private PatternLibrary CreateTestLibrary()
         {
-            return new PatternLibrary(this.GetType().Name, Assembly.GetExecutingAssembly());
+            return new PatternLibrary(TestLibrary.Platform, this.GetType().Name, this.GetType().GetTypeInfo().Assembly);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
