@@ -1,5 +1,7 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Rename;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.DesignTime
 {
@@ -40,7 +43,17 @@ namespace AutoPatterns.DesignTime
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: _s_codeFixTitle,
-                    createChangedDocument: c => PreProcessTemplate(context, declaration, c),
+                    createChangedDocument: c => {
+                        try
+                        {
+                            return PreProcessTemplate(context, declaration, c);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.ToString());
+                            throw;
+                        }
+                    },
                     equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
@@ -62,6 +75,10 @@ namespace AutoPatterns.DesignTime
             var typeSymbol = editor.SemanticModel.GetDeclaredSymbol(codedPartial, cancellation);
             var interfaceSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(typeof(IPatternTemplate).FullName);
             var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
+            var applyMethodDeclaration = DeclareExplicitInterfaceImplementationMethod(editor.Generator, interfaceSymbol, applyMethodSymbol);
+
+            //applyMethodDeclaration = applyMethodDeclaration
+            //    .WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(nameof(IPatternTemplate))));
 
             var generatedPartial = editor.Generator.ClassDeclaration(
                 typeSymbol.Name, 
@@ -71,7 +88,7 @@ namespace AutoPatterns.DesignTime
                     SyntaxFactory.ParseTypeName(typeof(IPatternTemplate).FullName)
                 },
                 members: new[] {
-                    editor.Generator.MethodDeclaration(applyMethodSymbol)
+                    applyMethodDeclaration.WithBody(Block())
                 });
 
             editor.InsertAfter(codedPartial, generatedPartial);
@@ -92,6 +109,21 @@ namespace AutoPatterns.DesignTime
 
             //// Return the new solution with the now-uppercase type name.
             //return newSolution;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static MethodDeclarationSyntax DeclareExplicitInterfaceImplementationMethod(SyntaxGenerator generator, ITypeSymbol interfaceType, IMethodSymbol interfaceMethod)
+        {
+            var returnType = interfaceMethod.ReturnType.IsSystemVoid() ? (SyntaxNode)null : generator.TypeExpression(interfaceMethod.ReturnType);
+
+            var declaration = MethodDeclaration((TypeSyntax)returnType, Identifier(interfaceMethod.Name));
+            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(interfaceType.Name)));
+
+            return declaration;
+
+            //method.Name, System.Linq.ImmutableArrayExtensions.Select<IParameterSymbol, SyntaxNode>(method.Parameters, (Func<IParameterSymbol, SyntaxNode>)(p => this.ParameterDeclaration(p, (SyntaxNode)null))), (IEnumerable<string>)null, ITypeSymbolExtensions.IsSystemVoid(method.ReturnType) ? (SyntaxNode)null : this.TypeExpression(method.ReturnType), method.DeclaredAccessibility, DeclarationModifiers.From((ISymbol)method), statements);
+
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
