@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Rename;
 
 namespace AutoPatterns.DesignTime
@@ -39,7 +40,7 @@ namespace AutoPatterns.DesignTime
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: _s_codeFixTitle,
-                    createChangedSolution: c => ProProcessTemplate(context.Document, declaration, c),
+                    createChangedDocument: c => PreProcessTemplate(context, declaration, c),
                     equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
@@ -50,23 +51,47 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private async Task<Solution> ProProcessTemplate(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
+        private async Task<Document> PreProcessTemplate(
+            CodeFixContext context, 
+            TypeDeclarationSyntax codedPartial, 
+            CancellationToken cancellation)
         {
-            // Compute new uppercase name.
-            var identifierToken = typeDecl.Identifier;
-            var newName = identifierToken.Text.ToCamelCase();
+            var document = context.Document;
+            var editor = await DocumentEditor.CreateAsync(document, cancellation);
 
-            // Get the symbol representing the type to be renamed.
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDecl, cancellationToken);
+            var typeSymbol = editor.SemanticModel.GetDeclaredSymbol(codedPartial, cancellation);
+            var interfaceSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(typeof(IPatternTemplate).FullName);
+            var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
 
-            // Produce a new solution that has all references to that type renamed, including the declaration.
-            var originalSolution = document.Project.Solution;
-            var optionSet = originalSolution.Workspace.Options;
-            var newSolution = await Renamer.RenameSymbolAsync(document.Project.Solution, typeSymbol, newName, optionSet, cancellationToken).ConfigureAwait(false);
+            var generatedPartial = editor.Generator.ClassDeclaration(
+                typeSymbol.Name, 
+                accessibility: typeSymbol.DeclaredAccessibility,
+                modifiers: DeclarationModifiers.Partial,
+                interfaceTypes: new[] {
+                    SyntaxFactory.ParseTypeName(typeof(IPatternTemplate).FullName)
+                },
+                members: new[] {
+                    editor.Generator.MethodDeclaration(applyMethodSymbol)
+                });
 
-            // Return the new solution with the now-uppercase type name.
-            return newSolution;
+            editor.InsertAfter(codedPartial, generatedPartial);
+            return editor.GetChangedDocument();
+
+            //// Compute new uppercase name.
+            //var identifierToken = typeDecl.Identifier;
+            //var newName = identifierToken.Text.ToCamelCase();
+
+            //// Get the symbol representing the type to be renamed.
+            //var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+            //var typeSymbol = semanticModel.GetDeclaredSymbol(typeDecl, cancellationToken);
+
+            //// Produce a new solution that has all references to that type renamed, including the declaration.
+            //var originalSolution = document.Project.Solution;
+            //var optionSet = originalSolution.Workspace.Options;
+            //var newSolution = await Renamer.RenameSymbolAsync(document.Project.Solution, typeSymbol, newName, optionSet, cancellationToken).ConfigureAwait(false);
+
+            //// Return the new solution with the now-uppercase type name.
+            //return newSolution;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

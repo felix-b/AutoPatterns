@@ -20,8 +20,19 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static readonly DiagnosticDescriptor _s_rule = new DiagnosticDescriptor(DiagnosticId, _s_title, _s_messageFormat, _s_category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: _s_description);
+        private static readonly DiagnosticDescriptor _s_rule = new DiagnosticDescriptor(
+            DiagnosticId, 
+            _s_title, 
+            _s_messageFormat, 
+            _s_category, 
+            DiagnosticSeverity.Warning, 
+            isEnabledByDefault: true, 
+            description: _s_description);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private static readonly string _s_classTemplateAttributeFullName = typeof(MetaProgram.Annotation.ClassTemplateAttribute).FullName;
+        private static readonly string _s_patternTemplateInterfaceFullName = typeof(IPatternTemplate).FullName;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -42,13 +53,23 @@ namespace AutoPatterns.DesignTime
         {
             var typeSymbol = (INamedTypeSymbol)context.Symbol;
             var templateAttributeTypeSymbol = context.Compilation.GetTypeByMetadataName(_s_classTemplateAttributeFullName);
-            var templateAttributeData = typeSymbol.GetAttributes().FirstOrDefault(attr =>attr.AttributeClass == templateAttributeTypeSymbol);
+            var templateAttributeData = typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass == templateAttributeTypeSymbol);
 
-            if (templateAttributeData != null)
+            if (templateAttributeData == null)
             {
-                var diagnostic = Diagnostic.Create(_s_rule, typeSymbol.Locations[0], typeSymbol.Name);
-                context.ReportDiagnostic(diagnostic);
+                return;
             }
+
+            var patternTemplateInterfaceTypeSymbol = context.Compilation.GetTypeByMetadataName(_s_patternTemplateInterfaceFullName);
+            var isPreprocessed = typeSymbol.Interfaces.Any(intf => intf == patternTemplateInterfaceTypeSymbol);
+
+            if (isPreprocessed)
+            {
+                return;
+            }
+
+            var diagnostic = Diagnostic.Create(_s_rule, typeSymbol.Locations[0], typeSymbol.Name);
+            context.ReportDiagnostic(diagnostic);
         }
     }
 }
