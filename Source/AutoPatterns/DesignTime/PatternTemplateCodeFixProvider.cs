@@ -43,17 +43,7 @@ namespace AutoPatterns.DesignTime
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: _s_codeFixTitle,
-                    createChangedDocument: c => {
-                        try
-                        {
-                            return PreProcessTemplate(context, declaration, c);
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.WriteLine(e.ToString());
-                            throw;
-                        }
-                    },
+                    createChangedDocument: c => PreProcessTemplate(context, declaration, c),
                     equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
@@ -115,7 +105,9 @@ namespace AutoPatterns.DesignTime
 
         private static MethodDeclarationSyntax DeclareExplicitInterfaceImplementationMethod(SyntaxGenerator generator, ITypeSymbol interfaceType, IMethodSymbol interfaceMethod)
         {
-            var returnType = interfaceMethod.ReturnType.IsSystemVoid() ? (SyntaxNode)null : generator.TypeExpression(interfaceMethod.ReturnType);
+            var returnType = interfaceMethod.ReturnType.IsSystemVoid() 
+                ? PredefinedType(Token(SyntaxKind.VoidKeyword))
+                : generator.TypeExpression(interfaceMethod.ReturnType);
 
             var declaration = MethodDeclaration((TypeSyntax)returnType, Identifier(interfaceMethod.Name));
             declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(interfaceType.Name)));
@@ -123,7 +115,6 @@ namespace AutoPatterns.DesignTime
             return declaration;
 
             //method.Name, System.Linq.ImmutableArrayExtensions.Select<IParameterSymbol, SyntaxNode>(method.Parameters, (Func<IParameterSymbol, SyntaxNode>)(p => this.ParameterDeclaration(p, (SyntaxNode)null))), (IEnumerable<string>)null, ITypeSymbolExtensions.IsSystemVoid(method.ReturnType) ? (SyntaxNode)null : this.TypeExpression(method.ReturnType), method.DeclaredAccessibility, DeclarationModifiers.From((ISymbol)method), statements);
-
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
