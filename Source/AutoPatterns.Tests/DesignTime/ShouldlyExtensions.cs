@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -90,6 +91,94 @@ namespace AutoPatterns.Tests.DesignTime
                         $"\r\nDiagnostic:\r\n\t{FormatDiagnostics(analyzer, actualItem)}\r\n");
                 }
             }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public static void ShouldBeSourceCode(this string actualCode, string expectedCode)
+        {
+            using (var actualReader = new StringReader(actualCode))
+            {
+                using (var expectedReader = new StringReader(expectedCode))
+                {
+                    int actualLineNumber = 0;
+                    int expectedLineNumber = 0;
+
+                    while (true)
+                    {
+                        var actualLine = ReadNextSignificantLineOfCode(actualReader, ref actualLineNumber);
+                        var expectedLine = ReadNextSignificantLineOfCode(expectedReader, ref expectedLineNumber);
+
+                        if (actualLine == null && expectedLine == null)
+                        {
+                            return;
+                        }
+
+                        actualLine.ShouldNotBeNull(
+                            $"Expected EOF, but was extra line {actualLineNumber}:\r\n\t{actualLine}\r\n" +
+                            GetSourceCodeAssertPrinting(actualCode, expectedCode));
+                        actualLine.ShouldNotBeNull(
+                            $"Expected line {actualLineNumber}, but was EOF. Expected line was:\r\n\t{expectedLine}\r\n" +
+                            GetSourceCodeAssertPrinting(actualCode, expectedCode));
+                        expectedLine.ShouldBe(
+                            actualLine, 
+                            $"At line {actualLineNumber},\r\n\r\n\texpected\r\n\r\n{expectedLine}\r\n\r\n\tbut was:\r\n\r\n{actualLine}\r\n" +
+                            GetSourceCodeAssertPrinting(actualCode, expectedCode));
+                    }
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static string GetSourceCodeAssertPrinting(string actualCode, string expectedCode)
+        {
+            return (
+                "\r\n\r\n------ EXPECTED SOURCE CODE ------\r\n\r\n" +
+                GetSourceCodePrinting(expectedCode) + 
+                "\r\n\r\n------ ACTUAL SOURCE CODE ------\r\n\r\n" +
+                GetSourceCodePrinting(actualCode) +
+                "\r\n\r\n------ END OFSOURCE CODE ------\r\n\r\n");
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static string GetSourceCodePrinting(string code)
+        {
+            var printing = new StringBuilder();
+
+            using (var reader = new StringReader(code))
+            {
+                string line;
+                int lineNumber = 0;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lineNumber++;
+                    printing.AppendLine($"{lineNumber:000}: {line}");
+                }
+            }
+
+            return printing.ToString();
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static string ReadNextSignificantLineOfCode(StringReader reader, ref int lineNumber)
+        {
+            string s;
+
+            do
+            {
+                s = reader.ReadLine()?.Trim();
+
+                if (s != null)
+                {
+                    lineNumber++;
+                }
+            } while (s == string.Empty);
+
+            return s;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

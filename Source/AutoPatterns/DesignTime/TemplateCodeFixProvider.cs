@@ -37,7 +37,7 @@ namespace AutoPatterns.DesignTime
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             // Find the type declaration identified by the diagnostic.
-            var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+            var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
 
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
@@ -58,7 +58,7 @@ namespace AutoPatterns.DesignTime
 
         private async Task<Document> PreProcessTemplate(
             CodeFixContext context, 
-            TypeDeclarationSyntax codedPartial, 
+            ClassDeclarationSyntax codedPartial, 
             CancellationToken cancellation)
         {
             var document = context.Document;
@@ -68,6 +68,12 @@ namespace AutoPatterns.DesignTime
             var interfaceSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(typeof(IPatternTemplate).FullName);
             var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
             var applyMethodDeclaration = DeclareExplicitInterfaceImplementationMethod(editor.Generator, interfaceSymbol, applyMethodSymbol);
+
+            if (!codedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                //https://mva.microsoft.com/en-us/training-courses/building-roslyn-based-analyzers-and-diagnostics-12596?l=fDjDWhNRB_2804668937
+                editor.Generator.WithModifiers(codedPartial, DeclarationModifiers.Partial);
+            }
 
             //applyMethodDeclaration = applyMethodDeclaration
             //    .WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(nameof(IPatternTemplate))));

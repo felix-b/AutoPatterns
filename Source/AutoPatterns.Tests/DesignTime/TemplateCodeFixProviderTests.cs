@@ -17,23 +17,7 @@ namespace AutoPatterns.Tests.DesignTime
             //-- arrange
 
             #region Original Source
-            var originalSource = @"#line 1
-                using AutoPatterns; 
-                namespace MyNS 
-                {
-                    [MetaProgram.Annotation.ClassTemplate]
-                    public partial class MyClass 
-                    { 
-                        public void MyMethod() 
-                        {  
-                        } 
-                    }
-                }
-            ";
-            #endregion
-
-            #region Expected Source after Fix
-            var expectedSourceAfterFix = @"#line 1
+            var originalSource = NormalizeSourceCode(@"
                 using AutoPatterns; 
                 namespace MyNS 
                 {
@@ -44,14 +28,32 @@ namespace AutoPatterns.Tests.DesignTime
                         {  
                         } 
                     }
-                    partial class MyTemplate : AutoPatterns.DesignTime.IPatternTemplate
+                }
+            ");
+            #endregion
+
+            #region Expected Source after Fix
+
+            var expectedSourceAfterFix = NormalizeSourceCode(@"
+                using AutoPatterns; 
+                namespace MyNS 
+                {
+                    [MetaProgram.Annotation.ClassTemplate]
+                    public partial class MyTemplate 
                     { 
-                        void IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        public void MyMethod() 
+                        {  
+                        } 
+                    }
+
+                    public partial class MyTemplate : AutoPatterns.DesignTime.IPatternTemplate
+                    { 
+                        void AutoPatterns.DesignTime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
                         {
                         }
                     }
                 }
-            ";
+            ");
             #endregion
 
             //-- act & assert
@@ -60,6 +62,63 @@ namespace AutoPatterns.Tests.DesignTime
                 new TemplateDiagnosticAnalyzer(), 
                 new TemplateCodeFixProvider(), 
                 originalSource, 
+                expectedSourceAfterFix,
+                allowNewCompilerDiagnostics: false);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void PreprocessTemplate_EmptyAndNonPartial()
+        {
+            //-- arrange
+
+            #region Original Source
+            var originalSource = NormalizeSourceCode(@"
+                using AutoPatterns; 
+                namespace MyNS 
+                {
+                    [MetaProgram.Annotation.ClassTemplate]
+                    public class MyTemplate 
+                    { 
+                        public void MyMethod() 
+                        {  
+                        } 
+                    }
+                }
+            ");
+            #endregion
+
+            #region Expected Source after Fix
+
+            var expectedSourceAfterFix = NormalizeSourceCode(@"
+                using AutoPatterns; 
+                namespace MyNS 
+                {
+                    [MetaProgram.Annotation.ClassTemplate]
+                    public partial class MyTemplate 
+                    { 
+                        public void MyMethod() 
+                        {  
+                        } 
+                    }
+
+                    public partial class MyTemplate : AutoPatterns.DesignTime.IPatternTemplate
+                    { 
+                        void AutoPatterns.DesignTime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        {
+                        }
+                    }
+                }
+            ");
+            #endregion
+
+            //-- act & assert
+
+            base.RunDiagnosticsAndCodefixEndToEnd(
+                new TemplateDiagnosticAnalyzer(),
+                new TemplateCodeFixProvider(),
+                originalSource,
                 expectedSourceAfterFix,
                 allowNewCompilerDiagnostics: false);
         }

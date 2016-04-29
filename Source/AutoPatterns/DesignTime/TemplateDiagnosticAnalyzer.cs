@@ -50,6 +50,11 @@ namespace AutoPatterns.DesignTime
         private static void AnalyzeSymbol(SymbolAnalysisContext context)
         {
             var typeSymbol = (INamedTypeSymbol)context.Symbol;
+            if (!typeSymbol.IsReferenceType)
+            {
+                return;
+            }
+
             var templateAttributeTypeSymbol = context.Compilation.GetTypeByMetadataName(_s_classTemplateAttributeFullName);
             var templateAttributeData = typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass == templateAttributeTypeSymbol);
 

@@ -211,7 +211,16 @@ namespace AutoPatterns.Tests.DesignTime
 
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actualFinalSource = DocumentToReducedFormattedString(document);
-            actualFinalSource.ShouldBe(expectedFinalSource);
+            actualFinalSource.ShouldBeSourceCode(expectedFinalSource);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected string NormalizeSourceCode(string code)
+        {
+            var syntax = CSharpSyntaxTree.ParseText(code);
+            var normalizedSyntax = CSharpSyntaxTree.Create((CSharpSyntaxNode)syntax.GetRoot().NormalizeWhitespace());
+            return normalizedSyntax.GetText().ToString();
         }
 
         #endregion
