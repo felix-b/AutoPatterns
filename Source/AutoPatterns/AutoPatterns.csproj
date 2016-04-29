@@ -40,6 +40,7 @@
     <Compile Include="DesignTime\IPatternTemplate.cs" />
     <Compile Include="DesignTime\PatternTemplateCodeFixProvider.cs" />
     <Compile Include="DesignTime\PatternTemplateDiagnosticAnalyzer.cs" />
+    <Compile Include="DesignTime\PatternTemplateDiagnosticIds.cs" />
     <Compile Include="DesignTime\PatternTemplatePreprocessor.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\SyntaxHelper.cs" />

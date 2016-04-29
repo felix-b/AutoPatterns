@@ -50,7 +50,9 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(PatternTemplateDiagnosticAnalyzer.DiagnosticId);
+        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
+            PatternTemplateDiagnosticIds.TemplateWasNotPreprocessed
+        );
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 

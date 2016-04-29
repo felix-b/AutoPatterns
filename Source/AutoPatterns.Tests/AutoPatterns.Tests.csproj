@@ -43,7 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DesignTime\DesignTimeUnitTestBase.cs" />
+    <Compile Include="DesignTime\PatternTemplateDiagnosticAnalyzerTests.cs" />
     <Compile Include="DesignTime\SampleTest.cs" />
+    <Compile Include="DesignTime\ShouldlyExtensions.cs" />
     <Compile Include="Examples\ExampleAncestors.cs" />
     <Compile Include="Examples\ExampleAutomaticProperty.cs" />
     <Compile Include="Examples\ExampleDataContract.cs" />
