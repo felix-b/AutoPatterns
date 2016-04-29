@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AutoPatterns.DesignTime
 {
-    public class PatternTemplatePreprocessor
+    public class TemplatePreprocessor
     {
 
     }

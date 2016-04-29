@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AutoPatterns.DesignTime
 {
-    public static class PatternTemplateDiagnosticIds
+    public static class TemplateDiagnosticIds
     {
         /// <summary>
         /// APT01: Pattern template was not preprocessed.

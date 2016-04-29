@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace AutoPatterns.DesignTime
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class PatternTemplateDiagnosticAnalyzer : DiagnosticAnalyzer
+    public class TemplateDiagnosticAnalyzer : DiagnosticAnalyzer
     {
         private static readonly LocalizableString _s_title = new LocalizableResourceString(nameof(Resources.AnalyzerTitle), Resources.ResourceManager, typeof(Resources));
         private static readonly LocalizableString _s_messageFormat = new LocalizableResourceString(nameof(Resources.AnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -17,7 +17,7 @@ namespace AutoPatterns.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         private static readonly DiagnosticDescriptor _s_templateNotPreprocessedRule = new DiagnosticDescriptor(
-            PatternTemplateDiagnosticIds.TemplateWasNotPreprocessed, 
+            TemplateDiagnosticIds.TemplateWasNotPreprocessed, 
             _s_title, 
             _s_messageFormat, 
             _s_category, 

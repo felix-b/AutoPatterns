@@ -17,8 +17,8 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace AutoPatterns.DesignTime
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(PatternTemplateCodeFixProvider)), Shared]
-    public class PatternTemplateCodeFixProvider : CodeFixProvider
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TemplateCodeFixProvider)), Shared]
+    public class TemplateCodeFixProvider : CodeFixProvider
     {
         public sealed override FixAllProvider GetFixAllProvider()
         {
@@ -51,7 +51,7 @@ namespace AutoPatterns.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
-            PatternTemplateDiagnosticIds.TemplateWasNotPreprocessed
+            TemplateDiagnosticIds.TemplateWasNotPreprocessed
         );
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,11 +112,23 @@ namespace AutoPatterns.DesignTime
                 : generator.TypeExpression(interfaceMethod.ReturnType);
 
             var declaration = MethodDeclaration((TypeSyntax)returnType, Identifier(interfaceMethod.Name));
-            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(interfaceType.Name)));
+            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(interfaceType.FullNameSyntax()));
+            declaration = declaration.WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(
+                interfaceMethod.Parameters.Select(p => generator.ParameterDeclaration(p)).Cast<ParameterSyntax>()
+            )));
 
             return declaration;
-
-            //method.Name, System.Linq.ImmutableArrayExtensions.Select<IParameterSymbol, SyntaxNode>(method.Parameters, (Func<IParameterSymbol, SyntaxNode>)(p => this.ParameterDeclaration(p, (SyntaxNode)null))), (IEnumerable<string>)null, ITypeSymbolExtensions.IsSystemVoid(method.ReturnType) ? (SyntaxNode)null : this.TypeExpression(method.ReturnType), method.DeclaredAccessibility, DeclarationModifiers.From((ISymbol)method), statements);
+            /*
+            method.Name, 
+            System.Linq.ImmutableArrayExtensions.Select<IParameterSymbol, SyntaxNode>(
+                method.Parameters, 
+                (Func<IParameterSymbol, SyntaxNode>)(p => this.ParameterDeclaration(p, (SyntaxNode)null))), 
+            (IEnumerable<string>)null, 
+            ITypeSymbolExtensions.IsSystemVoid(method.ReturnType) ? (SyntaxNode)null : this.TypeExpression(method.ReturnType), 
+            method.DeclaredAccessibility, 
+            DeclarationModifiers.From((ISymbol)method), 
+            statements);
+            */
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPatterns.Tests", "AutoP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPatterns.Platform.Net45", "AutoPatterns.Platform.Net45\AutoPatterns.Platform.Net45.csproj", "{88E56EB0-FAAC-4FF4-BB28-55957DE889DA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BCB41E56-67AE-4517-86D7-E18A628954FA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{BCB41E56-67AE-4517-86D7-E18A628954FA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{0F143C7E-0425-435B-93B9-4D20A493C44E}"
 	ProjectSection(SolutionItems) = preProject
@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{0F143C7E
 		NuGet\install.ps1 = NuGet\install.ps1
 		NuGet\uninstall.ps1 = NuGet\uninstall.ps1
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Production", "Production", "{75282286-F6D5-4B54-B309-DE9EDE930F8F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,7 +49,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{92308BDF-3A98-4F5D-BC34-69CAD3B231BD} = {75282286-F6D5-4B54-B309-DE9EDE930F8F}
 		{28295A64-3AF3-41CB-B130-ED005EF11E7B} = {BCB41E56-67AE-4517-86D7-E18A628954FA}
 		{FFB0D4D3-C3C3-456C-802D-2B5A18EA4E3C} = {BCB41E56-67AE-4517-86D7-E18A628954FA}
+		{88E56EB0-FAAC-4FF4-BB28-55957DE889DA} = {75282286-F6D5-4B54-B309-DE9EDE930F8F}
 	EndGlobalSection
 EndGlobal

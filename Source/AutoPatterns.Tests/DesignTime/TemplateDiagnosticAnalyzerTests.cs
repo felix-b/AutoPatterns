@@ -11,7 +11,7 @@ using Shouldly;
 namespace AutoPatterns.Tests.DesignTime
 {
     [TestFixture]
-    public class PatternTemplateDiagnosticAnalyzerTests : DesignTimeUnitTestBase
+    public class TemplateDiagnosticAnalyzerTests : DesignTimeUnitTestBase
     {
         [Test]
         public void WithoutTemplateAttribute_NoDiagnostics()
@@ -30,7 +30,7 @@ namespace AutoPatterns.Tests.DesignTime
                 }
             ";
             var document = base.CreateDocumentVerifyCompilable(source);
-            var analyzer = new PatternTemplateDiagnosticAnalyzer();
+            var analyzer = new TemplateDiagnosticAnalyzer();
 
             //-- act
 
@@ -62,7 +62,7 @@ namespace AutoPatterns.Tests.DesignTime
                 }
             ";
             var document = base.CreateDocumentVerifyCompilable(source);
-            var analyzer = new PatternTemplateDiagnosticAnalyzer();
+            var analyzer = new TemplateDiagnosticAnalyzer();
 
             //-- act
 
@@ -74,7 +74,7 @@ namespace AutoPatterns.Tests.DesignTime
                 analyzer, 
                 new DiagnosticExpectation(
                     DiagnosticSeverity.Warning, 
-                    PatternTemplateDiagnosticIds.TemplateWasNotPreprocessed, 
+                    TemplateDiagnosticIds.TemplateWasNotPreprocessed, 
                     "Test0.cs", 
                     atLine: 5) 
             );
@@ -106,7 +106,7 @@ namespace AutoPatterns.Tests.DesignTime
                 }
             ";
             var document = base.CreateDocumentVerifyCompilable(source);
-            var analyzer = new PatternTemplateDiagnosticAnalyzer();
+            var analyzer = new TemplateDiagnosticAnalyzer();
 
             //-- act
 
@@ -146,7 +146,7 @@ namespace AutoPatterns.Tests.DesignTime
                 }
             ";
             var document = base.CreateDocumentVerifyCompilable(source);
-            var analyzer = new PatternTemplateDiagnosticAnalyzer();
+            var analyzer = new TemplateDiagnosticAnalyzer();
 
             //-- act
 
