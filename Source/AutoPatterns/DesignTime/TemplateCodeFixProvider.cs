@@ -30,20 +30,20 @@ namespace AutoPatterns.DesignTime
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            var syntaxRoot = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
             // TODO: Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             // Find the type declaration identified by the diagnostic.
-            var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
+            var declaration = syntaxRoot.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
 
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: _s_codeFixTitle,
-                    createChangedDocument: c => PreProcessTemplate(context, declaration, c),
+                    createChangedDocument: c => PreProcessTemplate(context.Document, syntaxRoot, declaration, c),
                     equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
@@ -57,20 +57,18 @@ namespace AutoPatterns.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         private async Task<Document> PreProcessTemplate(
-            CodeFixContext context, 
-            ClassDeclarationSyntax codedPartial, 
+            Document document, 
+            SyntaxNode syntaxRoot,
+            ClassDeclarationSyntax handCodedPartial, 
             CancellationToken cancellation)
         {
-            var document = context.Document;
             var editor = await DocumentEditor.CreateAsync(document, cancellation);
 
-            var typeSymbol = editor.SemanticModel.GetDeclaredSymbol(codedPartial, cancellation);
+            var semanticModel = await document.GetSemanticModelAsync(cancellation);
+            var typeSymbol = semanticModel.GetDeclaredSymbol(handCodedPartial, cancellation);
             var interfaceSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(typeof(IPatternTemplate).FullName);
             var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
             var applyMethodDeclaration = DeclareExplicitInterfaceImplementationMethod(editor.Generator, interfaceSymbol, applyMethodSymbol);
-
-            //applyMethodDeclaration = applyMethodDeclaration
-            //    .WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(nameof(IPatternTemplate))));
 
             var generatedPartial = editor.Generator.ClassDeclaration(
                 typeSymbol.Name, 
@@ -83,30 +81,15 @@ namespace AutoPatterns.DesignTime
                     applyMethodDeclaration.WithBody(Block())
                 });
 
-            editor.InsertAfter(codedPartial, generatedPartial);
+            editor.InsertAfter(handCodedPartial, generatedPartial);
 
-            if (!codedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            if (!handCodedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
             {
-                editor.ReplaceNode(codedPartial, editor.Generator.WithModifiers(codedPartial, DeclarationModifiers.Partial));
+                var newHandCodedPartial = (ClassDeclarationSyntax)editor.Generator.WithModifiers(handCodedPartial, DeclarationModifiers.Partial);
+                editor.ReplaceNode(handCodedPartial, newHandCodedPartial);
             }
 
             return editor.GetChangedDocument();
-
-            //// Compute new uppercase name.
-            //var identifierToken = typeDecl.Identifier;
-            //var newName = identifierToken.Text.ToCamelCase();
-
-            //// Get the symbol representing the type to be renamed.
-            //var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-            //var typeSymbol = semanticModel.GetDeclaredSymbol(typeDecl, cancellationToken);
-
-            //// Produce a new solution that has all references to that type renamed, including the declaration.
-            //var originalSolution = document.Project.Solution;
-            //var optionSet = originalSolution.Workspace.Options;
-            //var newSolution = await Renamer.RenameSymbolAsync(document.Project.Solution, typeSymbol, newName, optionSet, cancellationToken).ConfigureAwait(false);
-
-            //// Return the new solution with the now-uppercase type name.
-            //return newSolution;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,17 +107,6 @@ namespace AutoPatterns.DesignTime
             )));
 
             return declaration;
-            /*
-            method.Name, 
-            System.Linq.ImmutableArrayExtensions.Select<IParameterSymbol, SyntaxNode>(
-                method.Parameters, 
-                (Func<IParameterSymbol, SyntaxNode>)(p => this.ParameterDeclaration(p, (SyntaxNode)null))), 
-            (IEnumerable<string>)null, 
-            ITypeSymbolExtensions.IsSystemVoid(method.ReturnType) ? (SyntaxNode)null : this.TypeExpression(method.ReturnType), 
-            method.DeclaredAccessibility, 
-            DeclarationModifiers.From((ISymbol)method), 
-            statements);
-            */
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
