@@ -69,12 +69,6 @@ namespace AutoPatterns.DesignTime
             var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
             var applyMethodDeclaration = DeclareExplicitInterfaceImplementationMethod(editor.Generator, interfaceSymbol, applyMethodSymbol);
 
-            if (!codedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-            {
-                //https://mva.microsoft.com/en-us/training-courses/building-roslyn-based-analyzers-and-diagnostics-12596?l=fDjDWhNRB_2804668937
-                editor.Generator.WithModifiers(codedPartial, DeclarationModifiers.Partial);
-            }
-
             //applyMethodDeclaration = applyMethodDeclaration
             //    .WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(IdentifierName(nameof(IPatternTemplate))));
 
@@ -90,6 +84,12 @@ namespace AutoPatterns.DesignTime
                 });
 
             editor.InsertAfter(codedPartial, generatedPartial);
+
+            if (!codedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                editor.ReplaceNode(codedPartial, editor.Generator.WithModifiers(codedPartial, DeclarationModifiers.Partial));
+            }
+
             return editor.GetChangedDocument();
 
             //// Compute new uppercase name.

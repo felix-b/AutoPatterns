@@ -111,6 +111,7 @@ namespace AutoPatterns.Tests.DesignTime
 
                         if (actualLine == null && expectedLine == null)
                         {
+                            TestLibrary.Platform.ConsoleWriteLine(GetSourceCodePrinting(actualCode));
                             return;
                         }
 
