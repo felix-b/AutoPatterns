@@ -58,17 +58,40 @@ namespace AutoPatterns.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         private async Task<Document> PreProcessTemplate(
-            Document document, 
-            SyntaxNode syntaxRoot,
+            Document document0, 
+            SyntaxNode syntaxRoot0,
             ClassDeclarationSyntax handCodedTemplateSyntax, 
             CancellationToken cancellation)
         {
-            var editor = await DocumentEditor.CreateAsync(document, cancellation);
+            var editor = await DocumentEditor.CreateAsync(document0, cancellation);
 
-            await GeneratePartialWithApplyMethod(document, handCodedTemplateSyntax, cancellation, editor);
+            await GeneratePartialWithApplyMethod(document0, handCodedTemplateSyntax, cancellation, editor);
             EnsureHandCodedPartHasPartialModifier(handCodedTemplateSyntax, editor);
 
-            return editor.GetChangedDocument();
+            var document1 = editor.GetChangedDocument();
+            var syntaxRoot1 = (CompilationUnitSyntax)(await document1.GetSyntaxRootAsync(cancellation));
+
+            var syntaxRoot2 = EnsureNecessaryUsings(syntaxRoot1);
+
+            return document1.WithSyntaxRoot(syntaxRoot2);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static CompilationUnitSyntax EnsureNecessaryUsings(CompilationUnitSyntax syntaxRoot)
+        {
+            string[] requiredUsings = new[] {
+                "AutoPatterns",
+                "AutoPatterns.Runtime",
+                "Microsoft.CodeAnalysis.CSharp",
+                "Microsoft.CodeAnalysis.CSharp.Syntax",
+            };
+
+            
+            var existingUsings = syntaxRoot.Usings.Select(u => u.)
+
+            var syntaxRoot2 = syntaxRoot1.AddUsings(UsingDirective(ParseName(typeof(IPatternTemplate).Namespace)));
+            return syntaxRoot2;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,7 +125,7 @@ namespace AutoPatterns.DesignTime
                 templateClassSymbol.Name,
                 accessibility: templateClassSymbol.DeclaredAccessibility,
                 modifiers: DeclarationModifiers.Partial,
-                interfaceTypes: new[] { SyntaxFactory.ParseTypeName(typeof(IPatternTemplate).FullName) },
+                interfaceTypes: new[] { ParseTypeName(typeof(IPatternTemplate).Name) },
                 members: new[] { applyMethodBuilder.ApplyMethodSyntax });
 
             editor.InsertAfter(handCodedPartial, generatedPartial);

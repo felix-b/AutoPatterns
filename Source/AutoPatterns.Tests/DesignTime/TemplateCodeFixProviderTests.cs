@@ -19,6 +19,7 @@ namespace AutoPatterns.Tests.DesignTime
             #region Original Source
             var originalSource = NormalizeSourceCode(@"
                 using AutoPatterns; 
+                using AutoPatterns.Runtime;
                 namespace MyNS 
                 {
                     [MetaProgram.Annotation.ClassTemplate]
@@ -36,6 +37,7 @@ namespace AutoPatterns.Tests.DesignTime
 
             var expectedSourceAfterFix = NormalizeSourceCode(@"
                 using AutoPatterns; 
+                using AutoPatterns.Runtime;
                 namespace MyNS 
                 {
                     [MetaProgram.Annotation.ClassTemplate]
@@ -45,10 +47,9 @@ namespace AutoPatterns.Tests.DesignTime
                         {  
                         } 
                     }
-
-                    public partial class MyTemplate : AutoPatterns.Runtime.IPatternTemplate
+                    public partial class MyTemplate : IPatternTemplate
                     { 
-                        void AutoPatterns.Runtime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        void IPatternTemplate.Apply(PatternWriterContext context)
                         {
                         }
                     }
@@ -76,6 +77,7 @@ namespace AutoPatterns.Tests.DesignTime
             #region Original Source
             var originalSource = NormalizeSourceCode(@"
                 using AutoPatterns; 
+                using AutoPatterns.Runtime;
                 namespace MyNS 
                 {
                     [MetaProgram.Annotation.ClassTemplate]
@@ -93,6 +95,7 @@ namespace AutoPatterns.Tests.DesignTime
 
             var expectedSourceAfterFix = NormalizeSourceCode(@"
                 using AutoPatterns; 
+                using AutoPatterns.Runtime;
                 namespace MyNS 
                 {
                     [MetaProgram.Annotation.ClassTemplate]
@@ -102,10 +105,67 @@ namespace AutoPatterns.Tests.DesignTime
                         {  
                         } 
                     }
-
-                    public partial class MyTemplate : AutoPatterns.Runtime.IPatternTemplate
+                    public partial class MyTemplate : IPatternTemplate
                     { 
-                        void AutoPatterns.Runtime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        void IPatternTemplate.Apply(PatternWriterContext context)
+                        {
+                        }
+                    }
+                }
+            ");
+            #endregion
+
+            //-- act & assert
+
+            base.RunDiagnosticsAndCodefixEndToEnd(
+                new TemplateDiagnosticAnalyzer(),
+                new TemplateCodeFixProvider(),
+                originalSource,
+                expectedSourceAfterFix,
+                allowNewCompilerDiagnostics: false);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void PreprocessTemplate_EmptyPartialAndNoUsings()
+        {
+            //-- arrange
+
+            #region Original Source
+            var originalSource = NormalizeSourceCode(@"
+                using AutoPatterns; 
+                namespace MyNS 
+                {
+                    [MetaProgram.Annotation.ClassTemplate]
+                    public class MyTemplate 
+                    { 
+                        public void MyMethod() 
+                        {  
+                        } 
+                    }
+                }
+            ");
+            #endregion
+
+            #region Expected Source after Fix
+            var expectedSourceAfterFix = NormalizeSourceCode(@"
+                using AutoPatterns; 
+                using AutoPatterns.Runtime;
+                using Microsoft.CodeAnalysis.CSharp;
+                using Microsoft.CodeAnalysis.CSharp.Syntax;
+                namespace MyNS 
+                {
+                    [MetaProgram.Annotation.ClassTemplate]
+                    public partial class MyTemplate 
+                    { 
+                        public void MyMethod() 
+                        {  
+                        } 
+                    }
+                    public partial class MyTemplate : IPatternTemplate
+                    { 
+                        void IPatternTemplate.Apply(PatternWriterContext context)
                         {
                         }
                     }

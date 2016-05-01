@@ -50,7 +50,7 @@ namespace AutoPatterns.DesignTime
             var voidReturnType = PredefinedType(Token(SyntaxKind.VoidKeyword));
             var declaration = MethodDeclaration(voidReturnType, Identifier(applyMethodSymbol.Name));
 
-            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(interfaceSymbol.FullNameSyntax()));
+            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(ParseName(interfaceSymbol.Name)));
             declaration = declaration.WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(
                 applyMethodSymbol.Parameters.Select(p => _editor.Generator.ParameterDeclaration(p)).Cast<ParameterSyntax>()
             )));
