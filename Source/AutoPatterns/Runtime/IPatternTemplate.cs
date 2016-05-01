@@ -1,6 +1,4 @@
-﻿using AutoPatterns.Runtime;
-
-namespace AutoPatterns.DesignTime
+﻿namespace AutoPatterns.Runtime
 {
     public interface IPatternTemplate
     {

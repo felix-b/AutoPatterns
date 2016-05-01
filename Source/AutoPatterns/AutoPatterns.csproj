@@ -37,11 +37,11 @@
   <ItemGroup>
     <Compile Include="AspectOption.cs" />
     <Compile Include="AutoPattern.cs" />
-    <Compile Include="DesignTime\IPatternTemplate.cs" />
+    <Compile Include="Runtime\IPatternTemplate.cs" />
     <Compile Include="DesignTime\TemplateCodeFixProvider.cs" />
     <Compile Include="DesignTime\TemplateDiagnosticAnalyzer.cs" />
     <Compile Include="DesignTime\TemplateDiagnosticIds.cs" />
-    <Compile Include="DesignTime\TemplatePreprocessor.cs" />
+    <Compile Include="DesignTime\TemplateApplyMethodBuilder.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\SyntaxHelper.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />

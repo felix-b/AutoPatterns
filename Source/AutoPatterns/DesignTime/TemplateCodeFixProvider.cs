@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoPatterns.Extensions;
+using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -59,54 +60,52 @@ namespace AutoPatterns.DesignTime
         private async Task<Document> PreProcessTemplate(
             Document document, 
             SyntaxNode syntaxRoot,
-            ClassDeclarationSyntax handCodedPartial, 
+            ClassDeclarationSyntax handCodedTemplateSyntax, 
             CancellationToken cancellation)
         {
             var editor = await DocumentEditor.CreateAsync(document, cancellation);
 
-            var semanticModel = await document.GetSemanticModelAsync(cancellation);
-            var typeSymbol = semanticModel.GetDeclaredSymbol(handCodedPartial, cancellation);
-            var interfaceSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(typeof(IPatternTemplate).FullName);
-            var applyMethodSymbol = interfaceSymbol.GetMembers(nameof(IPatternTemplate.Apply)).OfType<IMethodSymbol>().First();
-            var applyMethodDeclaration = DeclareExplicitInterfaceImplementationMethod(editor.Generator, interfaceSymbol, applyMethodSymbol);
-
-            var generatedPartial = editor.Generator.ClassDeclaration(
-                typeSymbol.Name, 
-                accessibility: typeSymbol.DeclaredAccessibility,
-                modifiers: DeclarationModifiers.Partial,
-                interfaceTypes: new[] {
-                    SyntaxFactory.ParseTypeName(typeof(IPatternTemplate).FullName)
-                },
-                members: new[] {
-                    applyMethodDeclaration.WithBody(Block())
-                });
-
-            editor.InsertAfter(handCodedPartial, generatedPartial);
-
-            if (!handCodedPartial.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-            {
-                var newHandCodedPartial = (ClassDeclarationSyntax)editor.Generator.WithModifiers(handCodedPartial, DeclarationModifiers.Partial);
-                editor.ReplaceNode(handCodedPartial, newHandCodedPartial);
-            }
+            await GeneratePartialWithApplyMethod(document, handCodedTemplateSyntax, cancellation, editor);
+            EnsureHandCodedPartHasPartialModifier(handCodedTemplateSyntax, editor);
 
             return editor.GetChangedDocument();
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static MethodDeclarationSyntax DeclareExplicitInterfaceImplementationMethod(SyntaxGenerator generator, ITypeSymbol interfaceType, IMethodSymbol interfaceMethod)
+        private static void EnsureHandCodedPartHasPartialModifier(ClassDeclarationSyntax handCodedTemplateSyntax, DocumentEditor editor)
         {
-            var returnType = interfaceMethod.ReturnType.IsSystemVoid() 
-                ? PredefinedType(Token(SyntaxKind.VoidKeyword))
-                : generator.TypeExpression(interfaceMethod.ReturnType);
+            if (!handCodedTemplateSyntax.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                var newHandCodedTemplateSyntax = (ClassDeclarationSyntax)editor.Generator.WithModifiers(
+                    handCodedTemplateSyntax, 
+                    DeclarationModifiers.Partial);
 
-            var declaration = MethodDeclaration((TypeSyntax)returnType, Identifier(interfaceMethod.Name));
-            declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(interfaceType.FullNameSyntax()));
-            declaration = declaration.WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(
-                interfaceMethod.Parameters.Select(p => generator.ParameterDeclaration(p)).Cast<ParameterSyntax>()
-            )));
+                editor.ReplaceNode(handCodedTemplateSyntax, newHandCodedTemplateSyntax);
+            }
+        }
 
-            return declaration;
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static async Task GeneratePartialWithApplyMethod(
+            Document document,
+            ClassDeclarationSyntax handCodedPartial,
+            CancellationToken cancellation,
+            DocumentEditor editor)
+        {
+            var semanticModel = await document.GetSemanticModelAsync(cancellation);
+            var templateClassSymbol = semanticModel.GetDeclaredSymbol(handCodedPartial, cancellation);
+            var applyMethodBuilder = new TemplateApplyMethodBuilder(templateClassSymbol, editor);
+            applyMethodBuilder.BuildApplyMethod();
+
+            var generatedPartial = editor.Generator.ClassDeclaration(
+                templateClassSymbol.Name,
+                accessibility: templateClassSymbol.DeclaredAccessibility,
+                modifiers: DeclarationModifiers.Partial,
+                interfaceTypes: new[] { SyntaxFactory.ParseTypeName(typeof(IPatternTemplate).FullName) },
+                members: new[] { applyMethodBuilder.ApplyMethodSyntax });
+
+            editor.InsertAfter(handCodedPartial, generatedPartial);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -46,9 +46,9 @@ namespace AutoPatterns.Tests.DesignTime
                         } 
                     }
 
-                    public partial class MyTemplate : AutoPatterns.DesignTime.IPatternTemplate
+                    public partial class MyTemplate : AutoPatterns.Runtime.IPatternTemplate
                     { 
-                        void AutoPatterns.DesignTime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        void AutoPatterns.Runtime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
                         {
                         }
                     }
@@ -103,9 +103,9 @@ namespace AutoPatterns.Tests.DesignTime
                         } 
                     }
 
-                    public partial class MyTemplate : AutoPatterns.DesignTime.IPatternTemplate
+                    public partial class MyTemplate : AutoPatterns.Runtime.IPatternTemplate
                     { 
-                        void AutoPatterns.DesignTime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
+                        void AutoPatterns.Runtime.IPatternTemplate.Apply(AutoPatterns.Runtime.PatternWriterContext context)
                         {
                         }
                     }
