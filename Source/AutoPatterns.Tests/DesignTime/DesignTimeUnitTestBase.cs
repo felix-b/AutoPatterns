@@ -189,7 +189,7 @@ namespace AutoPatterns.Tests.DesignTime
                 //check if applying the code fix introduced any new compiler diagnostics
                 if (!allowNewCompilerDiagnostics)
                 {
-                    newCompilerDiagnostics.Any().ShouldBeFalse(() => {
+                    newCompilerDiagnostics.Any(d => d.Severity >= DiagnosticSeverity.Info).ShouldBeFalse(() => {
                         document = document.WithSyntaxRoot(Formatter.Format(
                             document.GetSyntaxRootAsync().Result,
                             Formatter.Annotation,
@@ -223,6 +223,21 @@ namespace AutoPatterns.Tests.DesignTime
             return normalizedSyntax.GetText().ToString();
         }
 
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        protected string CompleteCompilationUnitSource(string insideNamespaceCode)
+        {
+            return NormalizeSourceCode(@"
+                using AutoPatterns; 
+                using AutoPatterns.Runtime;
+                using Microsoft.CodeAnalysis.CSharp;
+                using Microsoft.CodeAnalysis.CSharp.Syntax;
+                using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+                namespace MyNS 
+                {" + "\r\n" +
+                insideNamespaceCode + 
+                "}\r\n");
+        }
         #endregion
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

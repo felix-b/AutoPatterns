@@ -12,5 +12,10 @@ namespace AutoPatterns.DesignTime
         /// APT01: Pattern template was not preprocessed.
         /// </summary>
         public const string TemplateWasNotPreprocessed = "APT01";
+
+        /// <summary>
+        /// APT02: Preprocessed template might need to be refreshed.
+        /// </summary>
+        public const string PreprocessedTemplateNeedsRefresh = "APT02";
     }
 }

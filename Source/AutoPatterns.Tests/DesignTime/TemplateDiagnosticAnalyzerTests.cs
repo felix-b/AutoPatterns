@@ -44,7 +44,7 @@ namespace AutoPatterns.Tests.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [Test]
-        public void WithTemplateAttribute_IPatternTemplateNotImplemented_HasDiagnostics()
+        public void WithTemplateAttribute_IPatternTemplateNotImplemented_NotPreprocessedDiagnostics()
         {
             //-- arrange
 
@@ -120,7 +120,7 @@ namespace AutoPatterns.Tests.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [Test]
-        public void WithTemplateAttribute_IPatternTemplateImplementedInPartial_NoDiagnostics()
+        public void WithTemplateAttribute_IPatternTemplateImplementedInPartial_PreprocessAgainDiagnostics()
         {
             //-- arrange
 

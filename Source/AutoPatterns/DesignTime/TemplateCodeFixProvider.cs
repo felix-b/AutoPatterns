@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
@@ -70,28 +71,46 @@ namespace AutoPatterns.DesignTime
 
             var document1 = editor.GetChangedDocument();
             var syntaxRoot1 = (CompilationUnitSyntax)(await document1.GetSyntaxRootAsync(cancellation));
+            var semanticModel1 = await document1.GetSemanticModelAsync(cancellation);
 
-            var syntaxRoot2 = EnsureNecessaryUsings(syntaxRoot1);
+            var syntaxRoot2 = EnsureNecessaryUsings(syntaxRoot1, semanticModel1);
 
             return document1.WithSyntaxRoot(syntaxRoot2);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static CompilationUnitSyntax EnsureNecessaryUsings(CompilationUnitSyntax syntaxRoot)
+        private static CompilationUnitSyntax EnsureNecessaryUsings(CompilationUnitSyntax syntaxRoot, SemanticModel semanticModel)
         {
-            string[] requiredUsings = new[] {
+            var missingNamespaceUsings = new HashSet<string>(new[] {
                 "AutoPatterns",
                 "AutoPatterns.Runtime",
                 "Microsoft.CodeAnalysis.CSharp",
                 "Microsoft.CodeAnalysis.CSharp.Syntax",
-            };
+            });
+            var missingStaticUsings = new HashSet<string>(new[] {
+                "Microsoft.CodeAnalysis.CSharp.SyntaxFactory",
+            });
+            var existingNamespaceUsings = syntaxRoot.Usings
+                .Where(u => !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword))
+                .Select(u => u.Name.ToFullString());
+            var existingStaticUsings = syntaxRoot.Usings
+                .Where(u => u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword))
+                .Select(u => u.Name.ToFullString());
 
-            
-            var existingUsings = syntaxRoot.Usings.Select(u => u.)
+            missingNamespaceUsings.ExceptWith(existingNamespaceUsings);
+            missingStaticUsings.ExceptWith(existingStaticUsings);
 
-            var syntaxRoot2 = syntaxRoot1.AddUsings(UsingDirective(ParseName(typeof(IPatternTemplate).Namespace)));
-            return syntaxRoot2;
+            var usingsToAdd = new List<UsingDirectiveSyntax>();
+
+            usingsToAdd.AddRange(missingNamespaceUsings.Select(namespaceName => 
+                UsingDirective(ParseName(namespaceName))));
+
+            usingsToAdd.AddRange(missingStaticUsings.Select(className => 
+                UsingDirective(ParseName(className)).WithStaticKeyword(Token(SyntaxKind.StaticKeyword))));
+
+            var syntaxRoot1 = syntaxRoot.AddUsings(usingsToAdd.ToArray());
+            return syntaxRoot1;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
