@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using AutoPatterns.Extensions;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -188,17 +189,9 @@ namespace AutoPatterns.DesignTime
                 ITypeSymbol classTemplateAttributeTypeSymbol,
                 ClassDeclarationSyntax classSyntax)
             {
-                var semanticModel = context.Compilation.GetSemanticModel(classSyntax.SyntaxTree);
-
-                var result = classSyntax.AttributeLists.Any(list => list.Attributes.Any(
-                    attr => {
-                        var attrSymbolInfo = semanticModel.GetSymbolInfo(attr);
-                        var attrTypeSymbol = attrSymbolInfo.Symbol.ContainingType;
-                        var isClassTemplateAttr = (attrTypeSymbol == classTemplateAttributeTypeSymbol);
-                        return isClassTemplateAttr;
-                    }));
-
-                return result;
+                return classSyntax.HasAttributeSyntax(
+                    classTemplateAttributeTypeSymbol, 
+                    context.Compilation.GetSemanticModel(classSyntax.SyntaxTree));
             }
         }
     }

@@ -191,6 +191,7 @@ namespace AutoPatterns.Tests.DesignTime
                     {  
                     } 
                 }
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementation(Hash = 12345)]
                 public partial class MyTemplate : IPatternTemplate
                 {
                     // previously generated partial

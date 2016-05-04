@@ -45,7 +45,7 @@ namespace AutoPatterns.DesignTime
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: _s_codeFixTitle,
-                    createChangedDocument: c => PreProcessTemplate(context.Document, syntaxRoot, declaration, c),
+                    createChangedDocument: c => ImplementTemplate(context.Document, syntaxRoot, declaration, c),
                     equivalenceKey: _s_codeFixTitle),
                 diagnostic);
         }
@@ -59,7 +59,7 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private async Task<Document> PreProcessTemplate(
+        private async Task<Document> ImplementTemplate(
             Document document0, 
             SyntaxNode syntaxRoot0,
             ClassDeclarationSyntax handCodedTemplateSyntax, 
@@ -67,7 +67,8 @@ namespace AutoPatterns.DesignTime
         {
             var editor = await DocumentEditor.CreateAsync(document0, cancellation);
 
-            await GeneratePartialWithApplyMethod(document0, handCodedTemplateSyntax, cancellation, editor);
+            GeneratePartialWithApplyMethod(handCodedTemplateSyntax, cancellation, editor);
+            RemoveOldImplementationPartial(handCodedTemplateSyntax, editor);
             EnsureHandCodedPartHasPartialModifier(handCodedTemplateSyntax, editor);
 
             var document1 = editor.GetChangedDocument();
@@ -78,6 +79,11 @@ namespace AutoPatterns.DesignTime
 
             return document1.WithSyntaxRoot(syntaxRoot2);
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly string _s_codeFixTitle = "Preprocess this template";
+        private static readonly string _s_generatedImplementationAttributeFullName = typeof(GeneratedTemplateImplementationAttribute).FullName;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -116,6 +122,36 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        private static void RemoveOldImplementationPartial(ClassDeclarationSyntax handCodedTemplateSyntax, DocumentEditor editor)
+        {
+            var templateClassSymbol = editor.SemanticModel.GetDeclaredSymbol(handCodedTemplateSyntax);
+            var templateImplementationAttributeSymbol = editor.SemanticModel.Compilation.GetTypeByMetadataName(_s_generatedImplementationAttributeFullName);
+            var oldImplementationSyntaxRef = 
+                templateClassSymbol.DeclaringSyntaxReferences.FirstOrDefault(
+                    r => IsClassSyntaxWithAttribute(r.GetSyntax(), templateImplementationAttributeSymbol, editor.SemanticModel));
+
+            if (oldImplementationSyntaxRef != null)
+            {
+                editor.RemoveNode(oldImplementationSyntaxRef.GetSyntax());
+            }
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static bool IsClassSyntaxWithAttribute(SyntaxNode syntax, INamedTypeSymbol attributeTypeSymbol, SemanticModel semanticModel)
+        {
+            var classSyntax = (syntax as ClassDeclarationSyntax);
+
+            if (classSyntax != null)
+            {
+                return classSyntax.HasAttributeSyntax(attributeTypeSymbol, semanticModel);
+            }
+
+            return false;
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private static void EnsureHandCodedPartHasPartialModifier(ClassDeclarationSyntax handCodedTemplateSyntax, DocumentEditor editor)
         {
             if (!handCodedTemplateSyntax.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
@@ -130,13 +166,12 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static async Task GeneratePartialWithApplyMethod(
-            Document document,
+        private static void GeneratePartialWithApplyMethod(
             ClassDeclarationSyntax handCodedPartial,
             CancellationToken cancellation,
             DocumentEditor editor)
         {
-            var semanticModel = await document.GetSemanticModelAsync(cancellation);
+            var semanticModel = editor.SemanticModel;
             var templateClassSymbol = semanticModel.GetDeclaredSymbol(handCodedPartial, cancellation);
             var applyMethodBuilder = new TemplateApplyMethodBuilder(templateClassSymbol, editor);
             applyMethodBuilder.BuildApplyMethod();
@@ -150,9 +185,5 @@ namespace AutoPatterns.DesignTime
 
             editor.InsertAfter(handCodedPartial, generatedPartial);
         }
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static readonly string _s_codeFixTitle = "Preprocess this template";
     }
 }
