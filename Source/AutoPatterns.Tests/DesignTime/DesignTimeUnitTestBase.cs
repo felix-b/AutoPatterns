@@ -63,7 +63,11 @@ namespace AutoPatterns.Tests.DesignTime
         protected Document CreateDocumentVerifyCompilable(string source)
         {
             var document = CreateProject(new[] { source }).Documents.First();
-            GetCompilerDiagnostics(document).ShouldBeEmpty("The document fails to compile.");
+
+            GetCompilerDiagnostics(document)
+                .Where(d => d.Severity >= DiagnosticSeverity.Info)
+                .ShouldBeEmpty("The document fails to compile.");
+
             return document;
         }
 

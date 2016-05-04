@@ -9,13 +9,13 @@ namespace AutoPatterns.DesignTime
     public static class TemplateDiagnosticIds
     {
         /// <summary>
-        /// APT01: Pattern template was not preprocessed.
+        /// APT01: Pattern template implementation was not generated.
         /// </summary>
-        public const string TemplateWasNotPreprocessed = "APT01";
+        public const string TemplateIsNotImplemented = "APT01";
 
         /// <summary>
-        /// APT02: Preprocessed template might need to be refreshed.
+        /// APT02: Pattern template implementation may be out of date and needs to be regenerated.
         /// </summary>
-        public const string PreprocessedTemplateNeedsRefresh = "APT02";
+        public const string TemplateImplementationIsOutOfDate = "APT02";
     }
 }

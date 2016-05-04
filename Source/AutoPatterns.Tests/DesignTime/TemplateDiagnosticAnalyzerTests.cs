@@ -44,7 +44,7 @@ namespace AutoPatterns.Tests.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [Test]
-        public void WithTemplateAttribute_IPatternTemplateNotImplemented_NotPreprocessedDiagnostics()
+        public void WithTemplateAttribute_IPatternTemplateNotImplemented_HasNotImplementedDiagnostics()
         {
             //-- arrange
 
@@ -74,7 +74,7 @@ namespace AutoPatterns.Tests.DesignTime
                 analyzer, 
                 new DiagnosticExpectation(
                     DiagnosticSeverity.Warning, 
-                    TemplateDiagnosticIds.TemplateWasNotPreprocessed, 
+                    TemplateDiagnosticIds.TemplateIsNotImplemented, 
                     "Test0.cs", 
                     atLine: 5) 
             );
@@ -120,7 +120,7 @@ namespace AutoPatterns.Tests.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         [Test]
-        public void WithTemplateAttribute_IPatternTemplateImplementedInPartial_PreprocessAgainDiagnostics()
+        public void WithTemplateAttribute_IPatternTemplateImplementedInPartial_HasOutOfDateDiagnostics()
         {
             //-- arrange
 
@@ -137,6 +137,7 @@ namespace AutoPatterns.Tests.DesignTime
                         {        
                         } 
                     }
+                    [GeneratedTemplateImplementation(Hash=12345)]
                     partial class MyClass : IPatternTemplate
                     { 
                         void IPatternTemplate.Apply(PatternWriterContext context)
@@ -154,7 +155,14 @@ namespace AutoPatterns.Tests.DesignTime
 
             //-- assert
 
-            diagnostics.ShouldNotContainAnalyzerDiagnostics(analyzer);
+            diagnostics.ShouldMatchAnalyzerDiagnostics(
+                analyzer,
+                new DiagnosticExpectation(
+                    DiagnosticSeverity.Warning,
+                    TemplateDiagnosticIds.TemplateImplementationIsOutOfDate,
+                    "Test0.cs",
+                    atLine: 7)
+            );
         }
     }
 }

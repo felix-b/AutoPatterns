@@ -53,7 +53,8 @@ namespace AutoPatterns.DesignTime
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
-            TemplateDiagnosticIds.TemplateWasNotPreprocessed
+            TemplateDiagnosticIds.TemplateIsNotImplemented,
+            TemplateDiagnosticIds.TemplateImplementationIsOutOfDate
         );
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

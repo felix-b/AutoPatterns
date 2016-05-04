@@ -62,7 +62,7 @@ namespace AutoPatterns.DesignTime {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ensure preprocessing of AutoPatterns template..
+        ///   Looks up a localized string similar to Ensure that AutoPatterns templates are implemented..
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -71,20 +71,38 @@ namespace AutoPatterns.DesignTime {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Template &apos;{0}&apos; was not preprocessed..
+        ///   Looks up a localized string similar to Pattern template might have changed since its implementation was generated..
         /// </summary>
-        internal static string AnalyzerMessageFormat {
+        internal static string TemplateImplementationIsOutOfDateDescription {
             get {
-                return ResourceManager.GetString("AnalyzerMessageFormat", resourceCulture);
+                return ResourceManager.GetString("TemplateImplementationIsOutOfDateDescription", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AutoPatterns Template Preprocessor.
+        ///   Looks up a localized string similar to Generated implementation of template &apos;{0}&apos; might be out of date..
         /// </summary>
-        internal static string AnalyzerTitle {
+        internal static string TemplateImplementationIsOutOfDateMessage {
             get {
-                return ResourceManager.GetString("AnalyzerTitle", resourceCulture);
+                return ResourceManager.GetString("TemplateImplementationIsOutOfDateMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pattern template implementation was not generated. .
+        /// </summary>
+        internal static string TemplateNotImplementedDescription {
+            get {
+                return ResourceManager.GetString("TemplateNotImplementedDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template &apos;{0}&apos; was not implemented..
+        /// </summary>
+        internal static string TemplateNotImplementedMessage {
+            get {
+                return ResourceManager.GetString("TemplateNotImplementedMessage", resourceCulture);
             }
         }
     }

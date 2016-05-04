@@ -1,38 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using AutoPatterns.Runtime;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace AutoPatterns.DesignTime
 {
+
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class TemplateDiagnosticAnalyzer : DiagnosticAnalyzer
     {
-        private static readonly LocalizableString _s_title = new LocalizableResourceString(nameof(Resources.AnalyzerTitle), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString _s_messageFormat = new LocalizableResourceString(nameof(Resources.AnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString _s_description = new LocalizableResourceString(nameof(Resources.AnalyzerDescription), Resources.ResourceManager, typeof(Resources));
-        private static readonly string _s_category = "AutoPatterns";
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static readonly DiagnosticDescriptor _s_templateNotPreprocessedRule = new DiagnosticDescriptor(
-            TemplateDiagnosticIds.TemplateWasNotPreprocessed, 
-            _s_title, 
-            _s_messageFormat, 
-            _s_category, 
-            DiagnosticSeverity.Warning, 
-            isEnabledByDefault: true, 
-            description: _s_description);
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private static readonly string _s_classTemplateAttributeFullName = typeof(MetaProgram.Annotation.ClassTemplateAttribute).FullName;
-        private static readonly string _s_patternTemplateInterfaceFullName = typeof(IPatternTemplate).FullName;
-
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
         public override void Initialize(AnalysisContext context)
         {
             // TODO: Consider registering other actions that act on syntax instead of or in addition to symbols
@@ -42,38 +22,184 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
-            _s_templateNotPreprocessedRule
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _s_supportedDiagnostics;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void AnalyzeSymbol(SymbolAnalysisContext context)
+        {
+            var operation = new AnalysisOperation(context);
+            operation.Execute();
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly string _s_categoryTitle = "AutoPatterns";
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly LocalizableString _s_analyzerTitle = 
+            new LocalizableResourceString(nameof(Resources.TemplateNotImplementedDescription), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString _s_templateNotImplementedMessage = 
+            new LocalizableResourceString(nameof(Resources.TemplateNotImplementedMessage), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString _s_templateNotImplementedDescription = 
+            new LocalizableResourceString(nameof(Resources.TemplateNotImplementedDescription), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString _s_templateImplementationOutOfDateMessage = 
+            new LocalizableResourceString(nameof(Resources.TemplateImplementationIsOutOfDateMessage), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString _s_templateImplementationOutOfDateDescription = 
+            new LocalizableResourceString(nameof(Resources.TemplateImplementationIsOutOfDateDescription), Resources.ResourceManager, typeof(Resources));
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly DiagnosticDescriptor _s_templateNotImplementedRule = new DiagnosticDescriptor(
+            TemplateDiagnosticIds.TemplateIsNotImplemented, 
+            _s_analyzerTitle, 
+            _s_templateNotImplementedMessage, 
+            _s_categoryTitle, 
+            DiagnosticSeverity.Warning, 
+            isEnabledByDefault: true, 
+            description: _s_templateNotImplementedDescription);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly DiagnosticDescriptor _s_templateImplementationOutOfDateRule = new DiagnosticDescriptor(
+            TemplateDiagnosticIds.TemplateImplementationIsOutOfDate,
+            _s_analyzerTitle,
+            _s_templateImplementationOutOfDateMessage,
+            _s_categoryTitle,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: _s_templateImplementationOutOfDateDescription);
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static readonly ImmutableArray<DiagnosticDescriptor> _s_supportedDiagnostics = ImmutableArray.Create(
+            _s_templateNotImplementedRule,
+            _s_templateImplementationOutOfDateRule
         );
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static void AnalyzeSymbol(SymbolAnalysisContext context)
+        private static readonly string _s_classTemplateAttributeFullName = typeof(MetaProgram.Annotation.ClassTemplateAttribute).FullName;
+        private static readonly string _s_generatedImplementationAttributeFullName = typeof(GeneratedTemplateImplementationAttribute).FullName;
+        private static readonly string _s_patternTemplateInterfaceFullName = typeof(IPatternTemplate).FullName;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private class AnalysisOperation
         {
-            var typeSymbol = (INamedTypeSymbol)context.Symbol;
-            if (!typeSymbol.IsReferenceType)
+            private readonly SymbolAnalysisContext _context;
+            private readonly INamedTypeSymbol _typeSymbol;
+            private readonly INamedTypeSymbol _classTemplateAttributeTypeSymbol;
+            private readonly AttributeData _templateAttributeData;
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            public AnalysisOperation(SymbolAnalysisContext context)
             {
-                return;
+                _context = context;
+
+                _typeSymbol = (INamedTypeSymbol)_context.Symbol;
+                _classTemplateAttributeTypeSymbol = _context.Compilation.GetTypeByMetadataName(_s_classTemplateAttributeFullName);
+                _templateAttributeData = _typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass == _classTemplateAttributeTypeSymbol);
             }
 
-            var templateAttributeTypeSymbol = context.Compilation.GetTypeByMetadataName(_s_classTemplateAttributeFullName);
-            var templateAttributeData = typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass == templateAttributeTypeSymbol);
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            if (templateAttributeData == null)
+            public void Execute()
             {
-                return;
+                if (_typeSymbol.IsReferenceType && _templateAttributeData != null)
+                {
+                    if (IsTemplateImplemented())
+                    {
+                        AttributeData generatedImplementationAttribute;
+
+                        if (IsGeneratedImplementation(out generatedImplementationAttribute) &&
+                            !IsTemplateImplementationUpToDate(generatedImplementationAttribute))
+                        {
+                            _context.ReportDiagnostic(Diagnostic.Create(
+                                _s_templateImplementationOutOfDateRule, 
+                                _typeSymbol.Locations[0], 
+                                _typeSymbol.Name));
+                        }
+                    }
+                    else
+                    {
+                        _context.ReportDiagnostic(Diagnostic.Create(
+                            _s_templateNotImplementedRule, 
+                            _typeSymbol.Locations[0], 
+                            _typeSymbol.Name));
+                    }
+                }
             }
 
-            var patternTemplateInterfaceTypeSymbol = context.Compilation.GetTypeByMetadataName(_s_patternTemplateInterfaceFullName);
-            var isPreprocessed = typeSymbol.Interfaces.Any(intf => intf == patternTemplateInterfaceTypeSymbol);
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            if (isPreprocessed)
+            private bool IsTemplateImplementationUpToDate(AttributeData generatedImplementationAttribute)
             {
-                return;
+                var hashValueConstant = ImmutableArrayExtensions.FirstOrDefault(
+                    generatedImplementationAttribute.NamedArguments,
+                    arg => arg.Key == nameof(GeneratedTemplateImplementationAttribute.Hash));
+
+                if (hashValueConstant.Key != null)
+                {
+                    var generatedHash = (int)hashValueConstant.Value.Value;
+                    var typeSyntaxRef =_context.Symbol.DeclaringSyntaxReferences.FirstOrDefault(
+                        r => HasClassTemplateAttributeSyntax(
+                            _context, 
+                            _classTemplateAttributeTypeSymbol, 
+                            (ClassDeclarationSyntax)r.GetSyntax()));
+
+                    if (typeSyntaxRef != null)
+                    {
+                        var currentSyntaxText = typeSyntaxRef.GetSyntax().NormalizeWhitespace().ToFullString();
+                        var currentHash = currentSyntaxText.GetHashCode();
+
+                        return (generatedHash == currentHash);
+                    }
+                }
+
+                return true;
             }
 
-            var diagnostic = Diagnostic.Create(_s_templateNotPreprocessedRule, typeSymbol.Locations[0], typeSymbol.Name);
-            context.ReportDiagnostic(diagnostic);
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            private bool IsGeneratedImplementation(out AttributeData attribute)
+            {
+                var attributeTypeSymbol = _context.Compilation.GetTypeByMetadataName(_s_generatedImplementationAttributeFullName);
+                attribute = _typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass == attributeTypeSymbol);
+
+                return (attribute.AttributeClass != null);
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            private bool IsTemplateImplemented()
+            {
+                var patternTemplateInterfaceTypeSymbol = _context.Compilation.GetTypeByMetadataName(TemplateDiagnosticAnalyzer._s_patternTemplateInterfaceFullName);
+                var isImplemented = _typeSymbol.Interfaces.Any(intf => intf == patternTemplateInterfaceTypeSymbol);
+                return isImplemented;
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+            private bool HasClassTemplateAttributeSyntax(
+                SymbolAnalysisContext context,
+                ITypeSymbol classTemplateAttributeTypeSymbol,
+                ClassDeclarationSyntax classSyntax)
+            {
+                var semanticModel = context.Compilation.GetSemanticModel(classSyntax.SyntaxTree);
+
+                var result = classSyntax.AttributeLists.Any(list => list.Attributes.Any(
+                    attr => {
+                        var attrSymbolInfo = semanticModel.GetSymbolInfo(attr);
+                        var attrTypeSymbol = attrSymbolInfo.Symbol.ContainingType;
+                        var isClassTemplateAttr = (attrTypeSymbol == classTemplateAttributeTypeSymbol);
+                        return isClassTemplateAttr;
+                    }));
+
+                return result;
+            }
         }
     }
 }

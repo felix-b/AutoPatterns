@@ -118,15 +118,21 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AnalyzerDescription" xml:space="preserve">
-    <value>Ensure preprocessing of AutoPatterns template.</value>
+    <value>Ensure that AutoPatterns templates are implemented.</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>Template '{0}' was not preprocessed.</value>
-    <comment>The format-able message the diagnostic displays.</comment>
+  <data name="TemplateImplementationIsOutOfDateDescription" xml:space="preserve">
+    <value>Pattern template might have changed since its implementation was generated.</value>
   </data>
-  <data name="AnalyzerTitle" xml:space="preserve">
-    <value>AutoPatterns Template Preprocessor</value>
+  <data name="TemplateImplementationIsOutOfDateMessage" xml:space="preserve">
+    <value>Generated implementation of template '{0}' might be out of date.</value>
+  </data>
+  <data name="TemplateNotImplementedDescription" xml:space="preserve">
+    <value>Pattern template implementation was not generated. </value>
     <comment>The title of the diagnostic.</comment>
+  </data>
+  <data name="TemplateNotImplementedMessage" xml:space="preserve">
+    <value>Template '{0}' was not implemented.</value>
+    <comment>The format-able message the diagnostic displays.</comment>
   </data>
 </root>
