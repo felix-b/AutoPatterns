@@ -40,6 +40,7 @@ namespace AutoPatterns.Tests.DesignTime
                     {  
                     } 
                 }
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = -909438831)]
                 public partial class MyTemplate : IPatternTemplate
                 { 
                     void IPatternTemplate.Apply(PatternWriterContext context)
@@ -91,6 +92,7 @@ namespace AutoPatterns.Tests.DesignTime
                     {  
                     } 
                 }
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = 800958986)]
                 public partial class MyTemplate : IPatternTemplate
                 { 
                     void IPatternTemplate.Apply(PatternWriterContext context)
@@ -153,6 +155,7 @@ namespace AutoPatterns.Tests.DesignTime
                         {  
                         } 
                     }
+                    [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = 800958986)]
                     public partial class MyTemplate : IPatternTemplate
                     { 
                         void IPatternTemplate.Apply(PatternWriterContext context)
@@ -185,7 +188,7 @@ namespace AutoPatterns.Tests.DesignTime
 
             var originalSource = CompleteCompilationUnitSource(@"
                 [MetaProgram.Annotation.ClassTemplate]
-                public class MyTemplate 
+                public partial class MyTemplate 
                 { 
                     public void MyMethod() 
                     {  
@@ -215,6 +218,7 @@ namespace AutoPatterns.Tests.DesignTime
                     {  
                     } 
                 }
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = -909438831)]
                 public partial class MyTemplate : IPatternTemplate
                 { 
                     void IPatternTemplate.Apply(PatternWriterContext context)

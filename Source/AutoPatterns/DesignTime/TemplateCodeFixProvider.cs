@@ -183,7 +183,45 @@ namespace AutoPatterns.DesignTime
                 interfaceTypes: new[] { ParseTypeName(typeof(IPatternTemplate).Name) },
                 members: new[] { applyMethodBuilder.ApplyMethodSyntax });
 
+            generatedPartial = AddGeneratedTemplateImplementationAttribute(
+                generatedPartial,
+                handCodedPartial.NormalizeWhitespace().ToFullString().GetHashCode());
+
             editor.InsertAfter(handCodedPartial, generatedPartial);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private static SyntaxNode AddGeneratedTemplateImplementationAttribute(SyntaxNode syntax, int hashValue)
+        {
+            var classSyntax0 = (ClassDeclarationSyntax)syntax;
+
+            var classSyntax1 = classSyntax0.WithAttributeLists(SingletonList<AttributeListSyntax>(
+                AttributeList(
+                    SingletonSeparatedList<AttributeSyntax>(
+                        Attribute(ParseName(_s_generatedImplementationAttributeFullName))
+                        .WithArgumentList(
+                            AttributeArgumentList(
+                                SingletonSeparatedList<AttributeArgumentSyntax>(
+                                    AttributeArgument(
+                                        LiteralExpression(
+                                            SyntaxKind.NumericLiteralExpression,
+                                            Literal(hashValue)
+                                        )
+                                    )
+                                    .WithNameEquals(
+                                        NameEquals(
+                                            IdentifierName(nameof(GeneratedTemplateImplementationAttribute.Hash)))
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+
+            return classSyntax1;
         }
     }
 }
