@@ -67,7 +67,7 @@ namespace AutoPatterns.DesignTime
         {
             var editor = await DocumentEditor.CreateAsync(document0, cancellation);
 
-            GeneratePartialWithApplyMethod(handCodedTemplateSyntax, cancellation, editor);
+            GeneratePartialWithTemplateImplementation(handCodedTemplateSyntax, cancellation, editor);
             RemoveOldImplementationPartial(handCodedTemplateSyntax, editor);
             EnsureHandCodedPartHasPartialModifier(handCodedTemplateSyntax, editor);
 
@@ -166,14 +166,14 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        private static void GeneratePartialWithApplyMethod(
+        private static void GeneratePartialWithTemplateImplementation(
             ClassDeclarationSyntax handCodedPartial,
             CancellationToken cancellation,
             DocumentEditor editor)
         {
             var semanticModel = editor.SemanticModel;
             var templateClassSymbol = semanticModel.GetDeclaredSymbol(handCodedPartial, cancellation);
-            var applyMethodBuilder = new TemplateApplyMethodBuilder(templateClassSymbol, editor);
+            var applyMethodBuilder = new TemplateApplyMethodBuilder(handCodedPartial, templateClassSymbol, editor);
             applyMethodBuilder.BuildApplyMethod();
 
             var generatedPartial = editor.Generator.ClassDeclaration(

@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace AutoPatterns.DesignTime
 {
-
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class TemplateDiagnosticAnalyzer : DiagnosticAnalyzer
     {

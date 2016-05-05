@@ -10,23 +10,33 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static AutoPatterns.DesignTime.ClassWriterClientWriter;
 
 namespace AutoPatterns.DesignTime
 {
     public class TemplateApplyMethodBuilder
     {
-        private readonly INamedTypeSymbol _templateClassSymbol;
+        private readonly SemanticModel _semanticModel;
         private readonly DocumentEditor _editor;
+        private readonly ClassDeclarationSyntax _templateClassSyntax;
+        private readonly INamedTypeSymbol _templateClassSymbol;
         private readonly List<StatementSyntax> _statements;
+        private readonly ClassWriterClientWriter _writer;
         private MethodDeclarationSyntax _applyMethodSyntax;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public TemplateApplyMethodBuilder(INamedTypeSymbol templateClassSymbol, DocumentEditor editor)
+        public TemplateApplyMethodBuilder(
+            ClassDeclarationSyntax templateClassSyntax,
+            INamedTypeSymbol templateClassSymbol, 
+            DocumentEditor editor)
         {
+            _templateClassSyntax = templateClassSyntax;
             _templateClassSymbol = templateClassSymbol;
             _editor = editor;
+            _semanticModel = editor.SemanticModel;
             _statements = new List<StatementSyntax>();
+            _writer = new ClassWriterClientWriter(_semanticModel, _statements);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +44,9 @@ namespace AutoPatterns.DesignTime
         public void BuildApplyMethod()
         {
             _applyMethodSyntax = DeclareApplyMethod();
+
+            ExecuteImplementationPipeline();
+
             _applyMethodSyntax = _applyMethodSyntax.WithBody(Block(_statements));
         }
 
@@ -56,6 +69,27 @@ namespace AutoPatterns.DesignTime
             )));
 
             return declaration;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void ExecuteImplementationPipeline()
+        {
+            ImplementClassLevelAttributes();
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        private void ImplementClassLevelAttributes()
+        {
+            var classLevelAttributes = _templateClassSyntax
+                .AttributeLists
+                .SelectMany(list => list.Attributes)
+                .Where(attr => !_writer.IsMetaProgramAnnotationAttribute(attr));
+
+            foreach (var attribute in classLevelAttributes)
+            {
+                _writer.WriteAddClassAttribute(attribute);
+            }
         }
     }
 }

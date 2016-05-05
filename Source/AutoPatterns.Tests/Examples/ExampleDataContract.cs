@@ -43,26 +43,9 @@ namespace AutoPatterns.Tests.Examples
         private void ExampleDataContract__Apply(PatternWriterContext context)
         {
             context.Output.ClassWriter.AddClassAttribute(
-                typeof(System.Runtime.Serialization.DataContractAttribute), 
-                attr => attr
-                    .WithArgumentList(
-                        AttributeArgumentList(
-                            SingletonSeparatedList<AttributeArgumentSyntax>(
-                                AttributeArgument(
-                                    LiteralExpression(
-                                        SyntaxKind.StringLiteralExpression,
-                                        Literal("test.com")
-                                    )
-                                )
-                                .WithNameEquals(
-                                    NameEquals(
-                                        IdentifierName(nameof(System.Runtime.Serialization.DataContractAttribute.Namespace))
-                                    )
-                                )
-                            )
-                        )
-                    )
-            );
+                typeof(System.Runtime.Serialization.DataContractAttribute),
+                new object[0],
+                new object[] { nameof(DataContractAttribute.Namespace), "test.com" });
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------

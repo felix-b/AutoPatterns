@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DesignTime\DesignTimeUnitTestBase.cs" />
+    <Compile Include="DesignTime\TemplateApplyMethodBuilderTests.cs" />
     <Compile Include="DesignTime\TemplateCodeFixProviderTests.cs" />
     <Compile Include="DesignTime\TemplateDiagnosticAnalyzerTests.cs" />
     <Compile Include="DesignTime\SampleTest.cs" />

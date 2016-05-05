@@ -20,7 +20,7 @@ namespace AutoPatterns.Runtime
         private readonly List<ConstructorMember> _constructors = new List<ConstructorMember>();
         private readonly List<MethodMember> _methods = new List<MethodMember>();
         private readonly List<PropertyMember> _properties = new List<PropertyMember>();
-        private readonly List<IndexeryMember> _indexers = new List<IndexeryMember>();
+        private readonly List<IndexerMember> _indexers = new List<IndexerMember>();
         private readonly List<EventMember> _events = new List<EventMember>();
         private readonly Dictionary<MemberInfo, IMember> _memberByDeclaration = new Dictionary<MemberInfo, IMember>();
 
@@ -57,15 +57,15 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public AttributeSyntax AddClassAttribute(Type attributeType, Func<AttributeSyntax, AttributeSyntax> appendSyntax = null)
+        public AttributeSyntax AddClassAttribute(Type attributeType, object[] positionalArguments, object[] namedArguments)
         {
             _context.Library.EnsureMetadataReference(attributeType);
             var syntax = Attribute(SyntaxHelper.GetTypeSyntax(attributeType));
 
-            if (appendSyntax != null)
-            {
-                syntax = appendSyntax(syntax);
-            }
+            //if (appendSyntax != null)
+            //{
+            //    syntax = appendSyntax(syntax);
+            //}
 
             _classAttributes.Add(syntax);
             return syntax;
@@ -150,7 +150,7 @@ namespace AutoPatterns.Runtime
         public IReadOnlyList<ConstructorMember> Constructors => _constructors;
         public IReadOnlyList<MethodMember> Methods => _methods;
         public IReadOnlyList<PropertyMember> Properties => _properties;
-        public IReadOnlyList<IndexeryMember> Indexers => _indexers;
+        public IReadOnlyList<IndexerMember> Indexers => _indexers;
         public IReadOnlyList<EventMember> Events => _events;
         public IReadOnlyDictionary<MemberInfo, IMember> MemberByDeclaration => _memberByDeclaration;
 
@@ -448,9 +448,9 @@ namespace AutoPatterns.Runtime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        public class IndexeryMember : Member<IndexerDeclarationSyntax, PropertyInfo>
+        public class IndexerMember : Member<IndexerDeclarationSyntax, PropertyInfo>
         {
-            public IndexeryMember(string name, IndexerDeclarationSyntax syntax, PropertyInfo declaration)
+            public IndexerMember(string name, IndexerDeclarationSyntax syntax, PropertyInfo declaration)
                 : base(name, syntax, declaration)
             {
             }

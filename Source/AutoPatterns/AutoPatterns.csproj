@@ -37,7 +37,9 @@
   <ItemGroup>
     <Compile Include="AspectOption.cs" />
     <Compile Include="AutoPattern.cs" />
+    <Compile Include="DesignTime\ClassWriterClientWriter.cs" />
     <Compile Include="DesignTime\GeneratedTemplateImplementationAttribute.cs" />
+    <Compile Include="Extensions\SyntaxFactoryEx.cs" />
     <Compile Include="Extensions\SyntaxNodeExtensions.cs" />
     <Compile Include="Runtime\IPatternTemplate.cs" />
     <Compile Include="DesignTime\TemplateCodeFixProvider.cs" />
