@@ -95,6 +95,13 @@ namespace AutoPatterns.Tests.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public static void ShouldBeSourceCode(this SyntaxNode actualCode, string expectedCode)
+        {
+            ShouldBeSourceCode(actualCode.ToFullString(), expectedCode);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         public static void ShouldBeSourceCode(this string actualCode, string expectedCode)
         {
             using (var actualReader = new StringReader(actualCode))

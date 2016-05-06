@@ -4,12 +4,14 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Simplification;
@@ -38,6 +40,7 @@ namespace AutoPatterns.Tests.DesignTime
             CSharpSymbolsReference = MetadataReference.CreateFromFile(platform.AssemblyLocation(typeof(CSharpCompilation).GetTypeInfo().Assembly));
             CodeAnalysisReference = MetadataReference.CreateFromFile(platform.AssemblyLocation(typeof(Compilation).GetTypeInfo().Assembly));
             AutoPatternsReference = MetadataReference.CreateFromFile(platform.AssemblyLocation(typeof(MetaProgram).GetTypeInfo().Assembly));
+            SystemRuntimeSerializationReference = MetadataReference.CreateFromFile(platform.AssemblyLocation(typeof(DataContractAttribute).GetTypeInfo().Assembly));
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,6 +51,7 @@ namespace AutoPatterns.Tests.DesignTime
         protected static MetadataReference CSharpSymbolsReference { get; private set; }
         protected static MetadataReference CodeAnalysisReference { get; private set; }
         protected static MetadataReference AutoPatternsReference { get; private set; }
+        protected static MetadataReference SystemRuntimeSerializationReference { get; private set; }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -155,7 +159,7 @@ namespace AutoPatterns.Tests.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        protected void RunDiagnosticsAndCodefixEndToEnd(
+        protected SyntaxNode RunDiagnosticsAndCodefixEndToEnd(
             DiagnosticAnalyzer analyzer,
             CodeFixProvider codeFixProvider,
             string originalSource,
@@ -213,9 +217,18 @@ namespace AutoPatterns.Tests.DesignTime
                 }
             }
 
-            //after applying all of the code fixes, compare the resulting string to the inputted one
-            var actualFinalSource = DocumentToReducedFormattedString(document);
-            actualFinalSource.ShouldBeSourceCode(expectedFinalSource);
+            var simplifiedDocument = Simplifier.ReduceAsync(document, Simplifier.Annotation).Result;
+            var simpplifiedRoot = simplifiedDocument.GetSyntaxRootAsync().Result;
+            var formattedRoot = Formatter.Format(simpplifiedRoot, Formatter.Annotation, simplifiedDocument.Project.Solution.Workspace);
+
+            if (expectedFinalSource != null)
+            {
+                //after applying all of the code fixes, compare the resulting string to the inputted one
+                var actualFinalSource = formattedRoot.GetText().ToString();
+                actualFinalSource.ShouldBeSourceCode(expectedFinalSource);
+            }
+
+            return formattedRoot;
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,6 +271,7 @@ namespace AutoPatterns.Tests.DesignTime
                 .AddMetadataReference(projectId, SystemCoreReference)
                 .AddMetadataReference(projectId, CSharpSymbolsReference)
                 .AddMetadataReference(projectId, CodeAnalysisReference)
+                .AddMetadataReference(projectId, SystemRuntimeSerializationReference)
                 .AddMetadataReference(projectId, AutoPatternsReference);
 
             int count = 0;

@@ -44,7 +44,7 @@ namespace AutoPatterns.DesignTime
             var namedArguments = attribute.ArgumentList?.Arguments
                 .Where(arg => arg.NameEquals != null)
                 .SelectMany(arg => new[] {
-                    LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(arg.NameEquals.Name.ToFullString())),
+                    LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(arg.NameEquals.Name.Identifier.ValueText)),
                     arg.Expression
                 })
                 .ToArray();
@@ -78,8 +78,8 @@ namespace AutoPatterns.DesignTime
         public bool IsMetaProgramAnnotationAttribute(AttributeSyntax attribute)
         {
             var actualSymbolInfo = _semanticModel.GetSymbolInfo(attribute);
-            var containingTypeSymbol = actualSymbolInfo.Symbol.ContainingType.ContainingType;
-            var result = containingTypeSymbol.Equals(_metaProgramAnnotationTypeSymbol);
+            var containingTypeSymbol = actualSymbolInfo.Symbol.ContainingType?.ContainingType;
+            var result = (containingTypeSymbol != null && containingTypeSymbol.Equals(_metaProgramAnnotationTypeSymbol));
 
             return result;
         }
