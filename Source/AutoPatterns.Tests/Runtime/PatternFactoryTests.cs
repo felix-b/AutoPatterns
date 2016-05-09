@@ -413,7 +413,7 @@ namespace AutoPatterns.Tests.Runtime
 
             //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-            protected override void OnTypeBound(PatternFactory.TypeEntry entry)
+            protected internal override void OnTypeBound(PatternFactory.TypeEntry entry)
             {
                 _typeEntryLog.Add(entry.Type);
             }

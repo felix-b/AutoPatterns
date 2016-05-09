@@ -59,6 +59,141 @@ namespace AutoPatterns.Tests.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        [Test]
+        public void BaseType_Single()
+        {
+            //-- arrange
+
+            #region Template Code
+
+            var templateCode = @"
+                [MetaProgram.Annotation.ClassTemplate]
+                public partial class MyExceptionTemplate : Exception
+                { 
+                }
+            ";
+
+            #endregion
+
+            #region Expected Implementation Code
+
+            var expectedImplementationCode = @"
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = 852793621)]
+                public partial class MyExceptionTemplate : IPatternTemplate
+                { 
+                    void IPatternTemplate.Apply(PatternWriterContext context)
+                    {
+                        context.Output.ClassWriter.AddBaseType(typeof(System.Exception));
+                    }
+                }
+            ";
+
+            #endregion
+
+            //-- act 
+
+            var implementationSyntax = ImplementTemplate(templateCode);
+
+            //-- assert
+
+            implementationSyntax.ShouldBeSourceCode(expectedImplementationCode);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BaseTypes_Multiple()
+        {
+            //-- arrange
+
+            #region Template Code
+
+            var templateCode = @"
+                [MetaProgram.Annotation.ClassTemplate]
+                public partial class MyExceptionTemplate : Exception, IDisposable
+                { 
+                    public void Dispose()
+                    {
+                    }
+                }
+            ";
+
+            #endregion
+
+            #region Expected Implementation Code
+
+            var expectedImplementationCode = @"
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = 1303872184)]
+                public partial class MyExceptionTemplate : IPatternTemplate
+                { 
+                    void IPatternTemplate.Apply(PatternWriterContext context)
+                    {
+                        context.Output.ClassWriter.AddBaseType(typeof(System.Exception));
+                        context.Output.ClassWriter.AddBaseType(typeof(System.IDisposable));
+                    }
+                }
+            ";
+
+            #endregion
+
+            //-- act 
+
+            var implementationSyntax = ImplementTemplate(templateCode);
+
+            //-- assert
+
+            implementationSyntax.ShouldBeSourceCode(expectedImplementationCode);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void MethodMember_ImplementOnce()
+        {
+            //-- arrange
+
+            #region Template Code
+
+            var templateCode = @"
+                [MetaProgram.Annotation.ClassTemplate]
+                public partial class MyTemplate
+                { 
+                    [MetaProgram.Annotation.MetaMember(Repeat = RepeatOption.Once)]
+                    public void MyMethod()
+                    {
+                        var rand = new Random();
+                        var s = (rand.Next(0, 100) < 50 ? ""A"" : ""B"");
+                    }
+                }
+            ";
+
+            #endregion
+
+            #region Expected Implementation Code
+
+            var expectedImplementationCode = @"
+                [AutoPatterns.DesignTime.GeneratedTemplateImplementationAttribute(Hash = 1303872184)]
+                public partial class MyTemplate : IPatternTemplate
+                { 
+                    void IPatternTemplate.Apply(PatternWriterContext context)
+                    {
+                    }
+                }
+            ";
+
+            #endregion
+
+            //-- act 
+
+            var implementationSyntax = ImplementTemplate(templateCode);
+
+            //-- assert
+
+            implementationSyntax.ShouldBeSourceCode(expectedImplementationCode);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private ClassDeclarationSyntax ImplementTemplate(string templateSourceCode)
         {
             var newSyntaxRoot = base.RunDiagnosticsAndCodefixEndToEnd(

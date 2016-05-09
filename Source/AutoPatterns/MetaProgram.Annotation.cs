@@ -25,11 +25,13 @@ namespace AutoPatterns
             {
                 public MetaMemberAttribute()
                 {
+                    this.Repeat = RepeatOption.PerMatch;
                     this.Select = SelectOptions.All;
                     this.Implement = ImplementOptions.All;
                     this.Aspect = AspectOption.None;
                 }
 
+                public RepeatOption Repeat { get; set; }
                 public SelectOptions Select { get; set; }
                 public ImplementOptions Implement { get; set; }
                 public AspectOption Aspect { get; set; }

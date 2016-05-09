@@ -39,6 +39,7 @@
     <Compile Include="AutoPattern.cs" />
     <Compile Include="DesignTime\ClassWriterClientWriter.cs" />
     <Compile Include="DesignTime\GeneratedTemplateImplementationAttribute.cs" />
+    <Compile Include="DesignTime\Quoter.cs" />
     <Compile Include="Extensions\SyntaxFactoryEx.cs" />
     <Compile Include="Extensions\SyntaxNodeExtensions.cs" />
     <Compile Include="Runtime\IPatternTemplate.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Runtime\PatternWriterContext.cs" />
     <Compile Include="Runtime\ReferenceCache.cs" />
     <Compile Include="Runtime\TypeKey.cs" />
+    <Compile Include="RepeatOption.cs" />
     <Compile Include="SelectOptions.cs" />
   </ItemGroup>
   <ItemGroup>

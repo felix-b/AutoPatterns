@@ -49,7 +49,7 @@ namespace AutoPatterns.Runtime
         {
             _context.Library.EnsureMetadataReference(type);
 
-            var syntax = SimpleBaseType(SyntaxHelper.GetTypeSyntax(type));
+            var syntax = SimpleBaseType(ParseTypeName(type.FullName));
             _baseTypes.Add(syntax);
 
             return syntax;
@@ -60,7 +60,7 @@ namespace AutoPatterns.Runtime
         public AttributeSyntax AddClassAttribute(Type attributeType, object[] positionalArguments, object[] namedArguments)
         {
             _context.Library.EnsureMetadataReference(attributeType);
-            var syntax = Attribute(SyntaxHelper.GetTypeSyntax(attributeType));
+            var syntax = Attribute(ParseName(attributeType.FullName));
 
             //if (appendSyntax != null)
             //{
@@ -118,6 +118,16 @@ namespace AutoPatterns.Runtime
             var member = new PropertyMember(name, syntax, declaration);
 
             _properties.Add(member);
+            RegisterDeclaration(member);
+            return member;
+        }
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public MethodMember AddMethod(MethodDeclarationSyntax methodSyntax)
+        {
+            var member = new MethodMember(methodSyntax.Identifier.ToFullString(), methodSyntax, declaration: null);
+            _methods.Add(member);
             RegisterDeclaration(member);
             return member;
         }

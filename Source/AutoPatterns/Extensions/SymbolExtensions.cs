@@ -24,9 +24,20 @@ namespace AutoPatterns.Extensions
                 return symbol.Name;
             }
         }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         public static NameSyntax FullNameSyntax(this ISymbol symbol)
         {
             return SyntaxFactory.ParseName(FullName(symbol));
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public static bool HasAttribute(this ISymbol symbol, ITypeSymbol attributeTypeSymbol)
+        {
+            var result = symbol.GetAttributes().Any(attr => attr.AttributeClass.Equals(attributeTypeSymbol));
+            return result;
         }
     }
 }

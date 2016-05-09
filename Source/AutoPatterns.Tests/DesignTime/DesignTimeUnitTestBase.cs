@@ -168,6 +168,11 @@ namespace AutoPatterns.Tests.DesignTime
             bool allowNewCompilerDiagnostics = false)
         {
             var document = CreateDocument(originalSource);
+
+            GetCompilerDiagnostics(document)
+                .Where(d => d.Severity >= DiagnosticSeverity.Info)
+                .ShouldBeEmpty("The document fails to compile.");
+
             var analyzerDiagnostics = AnalyzeDocuments(analyzer, new[] { document });
             var compilerDiagnostics = GetCompilerDiagnostics(document);
             var attempts = analyzerDiagnostics.Length;
@@ -245,6 +250,7 @@ namespace AutoPatterns.Tests.DesignTime
         protected string CompleteCompilationUnitSource(string insideNamespaceCode)
         {
             return NormalizeSourceCode(@"
+                using System; 
                 using AutoPatterns; 
                 using AutoPatterns.Runtime;
                 using Microsoft.CodeAnalysis.CSharp;

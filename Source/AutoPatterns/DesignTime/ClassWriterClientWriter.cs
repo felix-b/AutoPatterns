@@ -19,6 +19,7 @@ namespace AutoPatterns.DesignTime
         private readonly List<StatementSyntax> _statements;
         private readonly ITypeSymbol _metaProgramAnnotationTypeSymbol;
         private readonly INamedTypeSymbol _classTemplateAttributeTypeSymbol;
+        private readonly INamedTypeSymbol _metaMemberAttributeTypeSymbol;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -28,6 +29,35 @@ namespace AutoPatterns.DesignTime
             _statements = statements;
             _metaProgramAnnotationTypeSymbol = semanticModel.Compilation.GetTypeByMetadataName(_s_metaProgramAnnotationTypeFullName);
             _classTemplateAttributeTypeSymbol = _semanticModel.Compilation.GetTypeByMetadataName(_s_classTemplateAttributeFullName);
+            _metaMemberAttributeTypeSymbol = _semanticModel.Compilation.GetTypeByMetadataName(_s_metaMemberAttributeFullName);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        public void WriteAddBaseType(TypeSyntax type)
+        {
+            var typeSymbol = _semanticModel.GetSymbolInfo(type).Symbol;
+
+            var statement = ExpressionStatement(
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        _s_writerAccessExpression,
+                        IdentifierName(nameof(ClassWriter.AddBaseType))
+                    )
+                )
+                .WithArgumentList(
+                    ArgumentList(
+                        SeparatedList<ArgumentSyntax>(
+                            new ArgumentSyntax[] {
+                                Argument(TypeOfExpression(ParseTypeName(typeSymbol.ToDisplayString()))),
+                            }
+                        )
+                    )
+                )
+            );
+
+            _statements.Add(statement);
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -75,6 +105,40 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public void WriteAddMethod(MethodDeclarationSyntax methodSyntax)
+        {
+            var quoter = new Quoter() {
+                ShortenCodeWithUsingStatic = true
+            };
+
+            var apiCall = quoter.Quote(methodSyntax, name: null);
+
+            var statement = ExpressionStatement(
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        _s_writerAccessExpression,
+                        IdentifierName(nameof(ClassWriter.AddMethod))
+                    )
+                )
+                .WithArgumentList(
+                    ArgumentList(
+                        SeparatedList<ArgumentSyntax>(
+                            new ArgumentSyntax[] {
+                                Argument(
+                                     apiCall.ToSyntaxNode()
+                                ),
+                            }
+                        )
+                    )
+                )
+            );
+
+            _statements.Add(statement);
+        }
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         public bool IsMetaProgramAnnotationAttribute(AttributeSyntax attribute)
         {
             var actualSymbolInfo = _semanticModel.GetSymbolInfo(attribute);
@@ -104,8 +168,15 @@ namespace AutoPatterns.DesignTime
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+        public ITypeSymbol MetaProgramAnnotationTypeSymbol => _metaProgramAnnotationTypeSymbol;
+        public ITypeSymbol ClassTemplateAttributeTypeSymbol => _classTemplateAttributeTypeSymbol;
+        public ITypeSymbol MetaMemberAttributeTypeSymbol => _metaMemberAttributeTypeSymbol;
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------
+
         private static readonly string _s_metaProgramAnnotationTypeFullName = typeof(MetaProgram.Annotation).FullName;
         private static readonly string _s_classTemplateAttributeFullName = typeof(MetaProgram.Annotation.ClassTemplateAttribute).FullName;
+        private static readonly string _s_metaMemberAttributeFullName = typeof(MetaProgram.Annotation.MetaMemberAttribute).FullName;
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
